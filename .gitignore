@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.dart_tool/
+.flutter-plugins
+.packages
+
+# Build outputs
+build/
+dist/
+*.apk
+*.ipa
+*.app
+.gradle/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated files
+coverage/
+.nyc_output/

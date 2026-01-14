@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+ 
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model Problem {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  difficulty  String       // Easy, Medium, Hard
+  testCases   Json         // Array of { input: string, output: string }
+  submissions Submission[]
+}
+
+model Submission {
+  id         String   @id @default(uuid())
+  problemId  String
+  problem    Problem  @relation(fields: [problemId], references: [id])
+  code       String
+  language   String
+  status     String   @default("PENDING") // PENDING, SUCCESS, WRONG_ANSWER, ERROR
+  output     String?
+  createdAt  DateTime @default(now())
+}
+

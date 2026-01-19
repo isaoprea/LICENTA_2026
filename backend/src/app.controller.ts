@@ -1,46 +1,114 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Param, 
+  NotFoundException, 
+  UseGuards, 
+  Request 
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
-import { AppService } from './app.service'; // Importul necesar pentru serviciul de evaluare
+import { SubmissionsService } from './submissions/submissions.service';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Controller()
 export class AppController {
-  // Injectăm serviciile necesare: Prisma pentru DB și AppService pentru logica de evaluare
   constructor(
     private readonly prisma: PrismaService,
-    private readonly appService: AppService,
+    private readonly submissionsService: SubmissionsService,
   ) {}
 
-  // Endpoint pentru a lista toate problemele disponibile
+  /**
+   * Returnează lista tuturor problemelor.
+   * Această rută este publică.
+   */
   @Get('problems')
   async getProblems() {
     return this.prisma.problem.findMany();
   }
 
-  // Endpoint pentru trimiterea codului către evaluare
-  @Post('submissions')
-  async submitCode(@Body() data: { problemId: string, code: string, language: string }) {
-    // 1. Salvăm submisia în baza de date cu statusul inițial PENDING
-    const submission = await this.prisma.submission.create({
-      data: {
-        problemId: data.problemId,
-        code: data.code,
-        language: data.language,
-        status: 'PENDING',
-      },
-    });
-
-    // 2. Declanșăm procesul de evaluare în fundal (fără await pentru a nu bloca răspunsul HTTP)
-    this.appService.evaluateSubmission(submission.id);
-
-    // 3. Returnăm imediat obiectul submisiei către Frontend/Mobile
-    return submission;
-  }
-
-  // Endpoint pentru a verifica statusul unei submisii (Polling)
-  @Get('submissions/:id')
-  async getStatus(@Param('id') id: string) {
-    return this.prisma.submission.findUnique({
+  /**
+   * Returnează detaliile unei singure probleme după ID.
+   * Această rută este publică.
+   */
+  @Get('problems/:id')
+  async getProblem(@Param('id') id: string) {
+    const problem = await this.prisma.problem.findUnique({
       where: { id },
     });
+    if (!problem) throw new NotFoundException('Problema nu a fost găsită');
+    return problem;
+  }
+
+  /**
+   * Evaluează codul trimis de utilizator.
+   * PROTEJATĂ: Salvează submisia legată de ID-ul utilizatorului logat.
+   */
+  @UseGuards(JwtAuthGuard) 
+  @Post('submissions/run')
+  async runSubmission(
+    @Body() data: { problemId: string, code: string, language: string }, 
+    @Request() req
+  ) {
+    // req.user.userId vine din strategia JWT (jwt.strategy.ts)
+    return this.submissionsService.judgeSubmission(
+      data.problemId,
+      data.code,
+      data.language,
+      req.user.userId 
+    );
+  }
+
+  /**
+   * Returnează istoricul de submisii.
+   * PROTEJATĂ: Filtrează baza de date pentru a returna DOAR datele utilizatorului curent.
+   * Aceasta elimină problema vizualizării celor 14 încercări vechi de către utilizatorii noi.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('submissions')
+  async getMySubmissions(@Request() req) {
+    // Debugging opțional: scoate comentariul de mai jos pentru a vedea cine cere datele în terminal
+    // console.log("Cerere istoric pentru user:", req.user.userId);
+
+    return this.prisma.submission.findMany({
+      where: {
+        userId: req.user.userId 
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      },
+      take: 50 // Limităm la ultimele 50 pentru performanță
+    });
+  }
+
+  /**
+   * Returnează statisticile utilizatorului logat (probleme rezolvate + încercări totale)
+   * PROTEJATĂ: Calculează DOAR pentru utilizatorul curent
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('user/stats')
+  async getUserStats(@Request() req) {
+    const userId = req.user.userId;
+
+    // Total încercări pentru acest user
+    const totalSubmissions = await this.prisma.submission.count({
+      where: { userId }
+    });
+
+    // Probleme unice rezolvate (Accepted) pentru acest user
+    const acceptedSubmissions = await this.prisma.submission.findMany({
+      where: { 
+        userId,
+        status: 'Accepted'
+      },
+      distinct: ['problemId'],
+      select: { problemId: true }
+    });
+
+    return {
+      totalSubmissions,
+      solvedProblems: acceptedSubmissions.length
+    };
   }
 }

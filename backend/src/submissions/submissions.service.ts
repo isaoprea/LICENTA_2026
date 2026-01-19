@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import axios from 'axios';
 
-// 1. Exportăm interfața pentru a fi vizibilă și în Controller (evită eroarea TS4053)
+// 1. Exportăm interfața pentru a fi vizibilă și în Controller
 export interface TestDetail {
   input: string;
   expected: string;
@@ -19,7 +19,7 @@ export class SubmissionsService {
     const versions: Record<string, string> = { 
       javascript: "18.15.0", 
       python: "3.10.0",
-      java: "17.0.2" // Suport pentru Java
+      java: "17.0.2" 
     };
 
     const payload = {
@@ -30,10 +30,11 @@ export class SubmissionsService {
     };
 
     const response = await axios.post(url, payload);
-    return response.data.run.output.trim(); // Trimm-uim output-ul pentru comparație corectă
+    return response.data.run.output.trim(); 
   }
 
-  async judgeSubmission(problemId: string, userCode: string, language: string) {
+  // MODIFICARE: Adăugăm userId ca al patrulea parametru
+  async judgeSubmission(problemId: string, userCode: string, language: string, userId: string) {
     const problem = await this.prisma.problem.findUnique({
       where: { id: problemId }
     });
@@ -41,8 +42,6 @@ export class SubmissionsService {
     if (!problem) throw new NotFoundException('Problema nu a fost găsită');
 
     const testCases = (problem.testCases as any[]) || []; 
-    
-    // 2. REZOLVAREA ERORII: Specificăm tipul tabloului aici
     const details: TestDetail[] = []; 
     let passedCount = 0;
 
@@ -72,12 +71,13 @@ export class SubmissionsService {
 
     const isAllPassed = testCases.length > 0 && passedCount === testCases.length;
 
-    // 3. Salvarea în tabela Submission (Schema ta)
+    // MODIFICARE: Salvăm userId în baza de date
     await this.prisma.submission.create({
       data: {
         problemId: problemId,
         code: userCode,
         language: language,
+        userId: userId, // Legătura critică cu utilizatorul logat
         status: isAllPassed ? "SUCCESS" : "WRONG_ANSWER",
         output: `Trecute: ${passedCount}/${testCases.length}`,
       }

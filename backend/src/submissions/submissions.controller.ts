@@ -1,18 +1,22 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { SubmissionsService, TestDetail } from './submissions.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('submissions')
 export class SubmissionsController {
   constructor(private readonly submissionsService: SubmissionsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('run')
-  async runCode(
-    @Body() body: { problemId: string; code: string; language: string }
+  async runSubmission(
+    @Body() data: { problemId: string; code: string; language: string },
+    @Request() req
   ): Promise<{ success: boolean; passed: number; total: number; details: TestDetail[] }> {
     return await this.submissionsService.judgeSubmission(
-      body.problemId,
-      body.code,
-      body.language
+      data.problemId,
+      data.code,
+      data.language,
+      req.user.userId // Adaugă userId extras din JWT
     );
   }
 }

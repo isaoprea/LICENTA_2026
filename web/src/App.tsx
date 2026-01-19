@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import Editor from '@monaco-editor/react';
+import axios from 'axios';
 
 interface Problem {
   id: string;
@@ -7,131 +9,174 @@ interface Problem {
   description: string;
 }
 
+interface TestDetail {
+  input: string;
+  expected: string;
+  actual: string;
+  passed: boolean;
+}
+
+interface JudgeResponse {
+  success: boolean;
+  passed: number;
+  total: number;
+  details: TestDetail[];
+}
+
 export default function App() {
   const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
-  const [code, setCode] = useState('');
-  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [code, setCode] = useState('// Scrie codul tău aici...');
+  const [language, setLanguage] = useState('javascript');
+  const [results, setResults] = useState<JudgeResponse | null>(null);
 
-  // 1. Fetch Lista de Probleme
+  // 1. Fetch Lista de Probleme (Rămâne la fel)
   const { data: problems, isLoading } = useQuery({
     queryKey: ['problems'],
-    queryFn: () => fetch('http://localhost:3000/problems').then(res => res.json()),
+    queryFn: () => axios.get('http://localhost:3000/problems').then(res => res.data),
   });
 
-  // 2. Polling pentru Rezultatul Evaluării
-  // Această interogare rulează automat la fiecare 2 secunde dacă statusul este PENDING
-  const { data: result } = useQuery({
-    queryKey: ['submission', submissionId],
-    queryFn: () => fetch(`http://localhost:3000/submissions/${submissionId}`).then(res => res.json()),
-    enabled: !!submissionId, // Se activează doar când avem un ID
-    refetchInterval: (query) => 
-      query.state.data?.status === 'PENDING' ? 2000 : false, // Verifică la 2 secunde dacă e în lucru
-  });
-
-  // 3. Logică de Trimitere Cod
+  // 2. Logică de Trimitere Cod (Actualizată pentru noul backend)
   const mutation = useMutation({
-    mutationFn: (newSubmission: any) => 
-      fetch('http://localhost:3000/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSubmission),
-      }).then(res => res.json()),
-    onSuccess: (data) => {
-      setSubmissionId(data.id); // Salvăm ID-ul pentru a porni polling-ul
+    mutationFn: (newSubmission: { problemId: string; code: string; language: string }) =>
+      axios.post('http://localhost:3000/submissions/run', newSubmission).then(res => res.data),
+    onSuccess: (data: JudgeResponse) => {
+      setResults(data); // Salvăm rezultatele primite instant
     }
   });
 
   if (isLoading) return <div style={{ padding: '20px' }}>Se încarcă problemele...</div>;
 
   return (
-    <div style={{ display: 'flex', padding: '20px', gap: '20px', fontFamily: 'sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', backgroundColor: '#f8f9fa' }}>
+      
       {/* Sidebar: Lista de Probleme */}
-      <div style={{ width: '300px', borderRight: '1px solid #eee', paddingRight: '20px' }}>
-        <h2>Challenges</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ width: '350px', borderRight: '1px solid #dee2e6', padding: '20px', backgroundColor: 'white', overflowY: 'auto' }}>
+        <h2 style={{ color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Challenges</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
           {problems?.map((p: Problem) => (
             <div 
               key={p.id} 
               onClick={() => {
                 setSelectedProblem(p);
-                setSubmissionId(null); // Resetăm rezultatul vechi la schimbarea problemei
+                setResults(null); // Resetăm rezultatele când schimbăm problema
+                setCode('// Scrie codul tău aici...');
               }} 
               style={{ 
                 cursor: 'pointer', 
                 padding: '15px', 
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                background: selectedProblem?.id === p.id ? '#f0f7ff' : '#fff',
-                borderColor: selectedProblem?.id === p.id ? '#007bff' : '#ddd'
+                border: '1px solid',
+                borderRadius: '10px',
+                transition: 'all 0.2s',
+                background: selectedProblem?.id === p.id ? '#e7f1ff' : '#fff',
+                borderColor: selectedProblem?.id === p.id ? '#007bff' : '#dee2e6',
+                boxShadow: selectedProblem?.id === p.id ? '0 4px 6px rgba(0,123,255,0.1)' : 'none'
               }}
             >
-              <strong>{p.title}</strong>
+              <strong style={{ color: selectedProblem?.id === p.id ? '#0056b3' : '#333' }}>{p.title}</strong>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Zona Principală: Editor și Rezultate */}
-      <div style={{ flex: 1 }}>
+      {/* Zona Principală */}
+      <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
         {selectedProblem ? (
-          <>
-            <h1>{selectedProblem.title}</h1>
-            <p style={{ color: '#666', marginBottom: '20px' }}>{selectedProblem.description}</p>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h1 style={{ margin: 0, color: '#222' }}>{selectedProblem.title}</h1>
+              
+              <select 
+                value={language} 
+                onChange={(e) => setLanguage(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc' }}
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+              </select>
+            </div>
             
-            <textarea 
-              value={code} 
-              onChange={(e) => setCode(e.target.value)} 
-              style={{ 
-                width: '100%', 
-                height: '300px', 
-                fontFamily: 'monospace', 
-                padding: '10px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                marginBottom: '10px'
-              }}
-              placeholder="Scrie codul tău JavaScript aici..."
-            />
+            <p style={{ color: '#555', fontSize: '1.1em', lineHeight: '1.5', marginBottom: '25px' }}>{selectedProblem.description}</p>
+            
+            {/* MONACO EDITOR în loc de TEXTAREA */}
+            <div style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <Editor
+                height="400px"
+                language={language}
+                theme="vs-dark"
+                value={code}
+                onChange={(val) => setCode(val || '')}
+                options={{
+                  fontSize: 14,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                }}
+              />
+            </div>
 
             <button 
-              onClick={() => mutation.mutate({ problemId: selectedProblem.id, code, language: 'javascript' })}
-              disabled={mutation.isPending || (result?.status === 'PENDING')}
+              onClick={() => mutation.mutate({ problemId: selectedProblem.id, code, language })}
+              disabled={mutation.isPending}
               style={{ 
-                padding: '10px 25px', 
+                marginTop: '20px',
+                padding: '12px 40px', 
                 fontSize: '16px', 
+                fontWeight: 'bold',
                 backgroundColor: '#007bff', 
                 color: 'white', 
                 border: 'none', 
-                borderRadius: '4px', 
+                borderRadius: '6px', 
                 cursor: 'pointer',
-                opacity: (mutation.isPending || result?.status === 'PENDING') ? 0.6 : 1
+                transition: 'background 0.2s',
+                opacity: mutation.isPending ? 0.7 : 1
               }}
             >
-              {mutation.isPending || result?.status === 'PENDING' ? 'Se evaluează...' : 'Run Code'}
+              {mutation.isPending ? 'Se evaluează...' : 'Run Code'}
             </button>
 
-            {/* Afișarea Rezultatului */}
-            {result && (
+            {/* Afișarea Rezultatelor (Actualizată) */}
+            {results && (
               <div style={{ 
-                marginTop: '20px', 
+                marginTop: '30px', 
                 padding: '20px', 
-                borderRadius: '8px',
-                border: '1px solid',
-                backgroundColor: result.status === 'SUCCESS' ? '#d4edda' : 
-                                 result.status === 'PENDING' ? '#fff3cd' : '#f8d7da',
-                color: result.status === 'SUCCESS' ? '#155724' : 
-                       result.status === 'PENDING' ? '#856404' : '#721c24',
-                borderColor: result.status === 'SUCCESS' ? '#c3e6cb' : 
-                             result.status === 'PENDING' ? '#ffeeba' : '#f5c6cb'
+                borderRadius: '10px',
+                borderLeft: '6px solid',
+                backgroundColor: results.success ? '#d4edda' : '#f8d7da',
+                borderColor: results.success ? '#28a745' : '#dc3545'
               }}>
-                <h3 style={{ margin: '0 0 10px 0' }}>Status: {result.status}</h3>
-                <p style={{ margin: 0 }}><strong>Feedback:</strong> {result.output}</p>
+                <h3 style={{ margin: '0 0 15px 0', color: results.success ? '#155724' : '#721c24' }}>
+                  {results.success ? '✅ Admis (Toate testele au trecut)' : '❌ Respins'}
+                </h3>
+                <p><strong>Scor:</strong> {results.passed} / {results.total} teste trecute</p>
+                
+                <div style={{ marginTop: '15px' }}>
+                  {results.details.map((detail, idx) => (
+                    <div key={idx} style={{ 
+                      padding: '8px', 
+                      backgroundColor: 'rgba(255,255,255,0.5)', 
+                      marginBottom: '5px', 
+                      borderRadius: '4px',
+                      fontSize: '0.9em' 
+                    }}>
+                      <span style={{ color: detail.passed ? '#28a745' : '#dc3545', fontWeight: 'bold' }}>
+                        Test {idx + 1}: {detail.passed ? 'PASSED' : 'FAILED'}
+                      </span>
+                      {!detail.passed && (
+                        <div style={{ marginLeft: '10px', marginTop: '4px', fontFamily: 'monospace' }}>
+                          Așteptat: <span style={{color: '#444'}}>"{detail.expected}"</span> | 
+                          Primit: <span style={{color: '#c00'}}>"{detail.actual}"</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-          </>
+          </div>
         ) : (
-          <div style={{ textAlign: 'center', marginTop: '50px', color: '#999' }}>
-            <h2>Selectează o problemă din stânga pentru a începe.</h2>
+          <div style={{ textAlign: 'center', marginTop: '100px', color: '#6c757d' }}>
+            <div style={{ fontSize: '50px' }}>💻</div>
+            <h2>Selectează o problemă pentru a începe codarea</h2>
           </div>
         )}
       </div>

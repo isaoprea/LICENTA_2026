@@ -8,6 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { AdminController } from './admin.controller'; // Importă controllerul
+import { AdminGuard } from './auth/admin.guard'; // Importă garda
 
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  controllers: [AppController, SubmissionsController, AuthController],
-  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy],
+  controllers: [AppController, SubmissionsController, AuthController, AdminController],
+  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard],
 })
 export class AppModule {}

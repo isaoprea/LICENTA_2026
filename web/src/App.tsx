@@ -6,6 +6,7 @@ import ProblemDetail from './pages/ProblemDetail';
 import SubmissionsHistory from './pages/SubmissionsHistory';
 import Login from './pages/Login';
 import Register from './pages/Register'; // 1. IMPORTUL lipsea
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/submissions" element={<SubmissionsHistory />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/admin" element={<AdminPanel />} />
           </Routes>
         </main>
       </div>

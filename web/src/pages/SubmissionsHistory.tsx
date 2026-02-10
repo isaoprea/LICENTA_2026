@@ -1,13 +1,34 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function SubmissionsHistory() {
   const [submissions, setSubmissions] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Preluăm toate încercările din baza de date
-    axios.get('http://localhost:3000/submissions').then(res => setSubmissions(res.data));
-  }, []);
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    // Preluăm toate încercările din baza de date (doar pentru userul logat)
+    axios.get('http://localhost:3000/submissions', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => setSubmissions(res.data))
+    .catch(err => {
+      console.error('Eroare la încărcare:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    });
+  }, [navigate]);
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">

@@ -14,6 +14,7 @@ model User {
   name        String?
   submissions Submission[] // Relația: Un utilizator poate avea mai multe încercări
   createdAt   DateTime     @default(now())
+  role        String       @default("USER")
 }
 
 model Lesson {

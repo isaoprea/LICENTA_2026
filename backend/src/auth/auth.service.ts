@@ -13,16 +13,32 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(pass, 10);
     return this.prisma.user.create({
-      data: { email, password: hashedPassword, name },
+      data: { 
+        email, 
+        password: hashedPassword, 
+        name,
+        role: "USER" // Toți utilizatorii noi sunt USER implicit
+      },
     });
   }
 
   async login(email: string, pass: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
+    
     if (!user || !(await bcrypt.compare(pass, user.password))) {
       throw new UnauthorizedException('Date incorecte');
     }
-    const payload = { email: user.email, sub: user.id };
-    return { access_token: this.jwtService.sign(payload) };
+
+    // MODIFICARE CRITICĂ: Includem rolul în payload
+    const payload = { 
+      email: user.email, 
+      sub: user.id, 
+      role: user.role,
+      name: user.name
+    };
+
+    return { 
+      access_token: this.jwtService.sign(payload) 
+    };
   }
 }

@@ -75,6 +75,9 @@ export class AppController {
       where: {
         userId: req.user.userId 
       },
+      include: {
+        problem: true
+      },
       orderBy: { 
         createdAt: 'desc' 
       },

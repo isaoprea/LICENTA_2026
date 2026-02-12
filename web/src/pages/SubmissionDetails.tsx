@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-// Importăm componentele pentru colorarea codului
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -24,7 +23,6 @@ export default function SubmissionDetails() {
         setLoading(false);
       }
     };
-
     fetchDetails();
   }, [id]);
 
@@ -32,21 +30,21 @@ export default function SubmissionDetails() {
   if (!data) return <div className="p-10 text-center text-red-500">Submisia nu a fost găsită.</div>;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto animate-fadeIn">
-      {/* Header cu Navigare înapoi */}
+    <div className="p-8 max-w-6xl mx-auto animate-fadeIn">
+      {/* Header cu Navigare */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <Link to="/submissions" className="text-blue-600 hover:underline text-sm mb-2 block">
+          <Link to="/history" className="text-blue-600 hover:underline text-sm mb-2 block">
             ← Înapoi la Istoric
           </Link>
           <h1 className="text-3xl font-black text-slate-800">
             Detalii Submisie: <span className="text-blue-600">{data.problem.title}</span>
           </h1>
         </div>
-        <div className={`px-4 py-2 rounded-lg font-bold shadow-sm ${
-          data.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        <div className={`px-6 py-2 rounded-full font-black shadow-sm ${
+          data.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
         }`}>
-          {data.status}
+          {data.status === 'SUCCESS' ? '✅ ADMIS' : '❌ RESPINS'}
         </div>
       </div>
 
@@ -68,10 +66,54 @@ export default function SubmissionDetails() {
         </div>
       </div>
 
-      {/* Secțiunea de Cod cu Syntax Highlighting */}
+      {/* Tabel Analiză Teste */}
+      {data.testResults && data.testResults.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
+            <span>📊</span> Analiză Detaliată pe Teste
+          </h3>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase">
+                  <th className="px-6 py-4 font-bold">Test</th>
+                  <th className="px-6 py-4 font-bold">Input</th>
+                  <th className="px-6 py-4 font-bold">Așteptat</th>
+                  <th className="px-6 py-4 font-bold">Primit</th>
+                  <th className="px-6 py-4 font-bold text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.testResults.map((test: any, idx: number) => (
+                  <tr key={idx} className={test.passed ? "" : "bg-rose-50/30"}>
+                    <td className="px-6 py-4 font-mono text-slate-400">#{idx + 1}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-600">{test.input}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-emerald-700 font-bold">{test.expected}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-rose-700 font-bold whitespace-pre-wrap">
+                      {test.actual || "[FĂRĂ OUTPUT]"}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {test.passed ? (
+                        <span className="text-emerald-500 text-xl font-bold">✓</span>
+                      ) : (
+                        <span className="text-rose-500 text-xl font-bold">✕</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Secțiunea de Cod cu cele 3 bulinuțe */}
+      <h3 className="text-xl font-bold mb-4 text-slate-800">Codul trimis</h3>
       <div className="rounded-xl overflow-hidden shadow-2xl border border-slate-800">
         <div className="bg-slate-800 px-4 py-2 flex justify-between items-center">
-          <span className="text-slate-400 text-xs font-mono">source_code.{data.language === 'python' ? 'py' : data.language === 'cpp' ? 'cpp' : data.language === 'java' ? 'java' : 'js'}</span>
+          <span className="text-slate-400 text-xs font-mono">
+            source_code.{data.language === 'python' ? 'py' : data.language === 'cpp' ? 'cpp' : data.language === 'java' ? 'java' : 'js'}
+          </span>
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
@@ -87,18 +129,6 @@ export default function SubmissionDetails() {
           {data.code}
         </SyntaxHighlighter>
       </div>
-
-      {/* Mesaj de eroare (Stderr) - apare doar dacă nu este SUCCESS */}
-      {data.status !== 'SUCCESS' && (
-        <div className="mt-8 bg-slate-900 rounded-xl p-6 border-l-4 border-red-500">
-          <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2">
-            <span>⚠️</span> Detalii Eroare / Output Consolă
-          </h3>
-          <pre className="text-slate-300 font-mono text-sm whitespace-pre-wrap leading-relaxed">
-            {data.output.includes('Trecute:') ? "Codul a rulat dar rezultatele sunt incorecte." : data.output}
-          </pre>
-        </div>
-      )}
     </div>
   );
 }

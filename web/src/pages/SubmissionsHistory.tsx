@@ -38,6 +38,8 @@ export default function SubmissionsHistory() {
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+              {/* COLOANĂ NOUĂ */}
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-blue-600">Problemă</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Limbaj</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Scor/Output</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Data</th>
@@ -45,7 +47,6 @@ export default function SubmissionsHistory() {
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {submissions.map((s: any) => (
-              /* MODIFICARE AICI: Am adăugat onClick și cursor-pointer pentru navigare */
               <tr 
                 key={s.id} 
                 onClick={() => navigate(`/submissions/${s.id}`)} 
@@ -59,10 +60,15 @@ export default function SubmissionsHistory() {
                     {s.status}
                   </span>
                 </td>
+                
+                {/* DATE COLOANĂ NOUĂ */}
+                <td className="px-6 py-4 font-bold text-slate-700">
+                  {s.problem?.title || 'Problemă Necunoscută'}
+                </td>
+
                 <td className="px-6 py-4 font-mono text-slate-600 capitalize">{s.language}</td>
                 <td className="px-6 py-4 text-slate-600 italic">
                   {s.output}
-                  {/* Indicator vizual mic care apare la hover */}
                   <span className="ml-2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold">
                     VEZI COD →
                   </span>

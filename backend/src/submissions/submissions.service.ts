@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma.service';
 import axios from 'axios';
 
-// 1. Exportăm interfața pentru a fi vizibilă și în Controller
 export interface TestDetail {
   input: string;
   expected: string;
@@ -20,7 +19,7 @@ export class SubmissionsService {
       javascript: "18.15.0", 
       python: "3.10.0",
       java: "17.0.2",
-      cpp: "10.2.0" // Suport pentru C++
+      cpp: "10.2.0" 
     };
 
     const payload = {
@@ -31,8 +30,28 @@ export class SubmissionsService {
     };
 
     const response = await axios.post(url, payload);
-    // Returnăm output-ul curățat de spații inutile
-    return response.data.run.output.trim(); 
+    const run = response.data.run;
+
+    return {
+      output: (run.output || "").trim(),
+      stderr: (run.stderr || "").trim(),
+      code: run.code
+    };
+  }
+
+  // --- METODA PENTRU ISTORIC (ADAUGĂ/MODIFICĂ ASTA) ---
+  async findAllByUser(userId: string) {
+    return this.prisma.submission.findMany({
+      where: { userId },
+      include: { 
+        problem: {
+          select: { title: true } // Luăm titlul problemei pentru tabelul de istoric
+        } 
+      },
+      orderBy: {
+        createdAt: 'desc' // Cele mai noi submisii apar primele
+      }
+    });
   }
 
   async judgeSubmission(problemId: string, userCode: string, language: string, userId: string) {
@@ -48,10 +67,10 @@ export class SubmissionsService {
 
     for (const test of testCases) {
       try {
-        // REPARARE: Transformăm textul "\n" în linie nouă reală pentru C++
         const cleanInput = test.input.toString().replace(/\\n/g, '\n');
-
-        const actualOutput = await this.callPiston(language, userCode, cleanInput);
+        const result = await this.callPiston(language, userCode, cleanInput);
+        
+        const actualOutput = result.stderr ? `EROARE: ${result.stderr}` : result.output;
         const expectedOutput = (test.output || "").toString().trim();
         const isCorrect = actualOutput === expectedOutput;
 
@@ -67,7 +86,7 @@ export class SubmissionsService {
         details.push({
           input: test.input,
           expected: test.output || "",
-          actual: "EROARE LA EXECUTIE",
+          actual: "EROARE CRITICĂ DE REȚEA/SISTEM",
           passed: false
         });
       }
@@ -75,7 +94,6 @@ export class SubmissionsService {
 
     const isAllPassed = testCases.length > 0 && passedCount === testCases.length;
 
-    // REPARARE EROARE TIP: Adăugăm 'as any' pentru a permite salvarea JSON-ului
     await this.prisma.submission.create({
       data: {
         problemId: problemId,
@@ -100,17 +118,11 @@ export class SubmissionsService {
     const submission = await this.prisma.submission.findUnique({
       where: { id },
       include: { 
-        problem: {
-          select: { title: true } 
-        } 
+        problem: { select: { title: true } } 
       }
     });
 
-    if (!submission) {
-      throw new NotFoundException('Submisia nu a fost găsită');
-    }
-
-    // Verificăm drepturile de acces
+    if (!submission) throw new NotFoundException('Submisia nu a fost găsită');
     if (submission.userId !== userId && role !== 'ADMIN') {
       throw new ForbiddenException('Nu ai permisiunea de a vedea această submisie');
     }

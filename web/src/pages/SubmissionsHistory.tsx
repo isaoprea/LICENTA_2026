@@ -14,7 +14,6 @@ export default function SubmissionsHistory() {
       return;
     }
 
-    // Preluăm toate încercările din baza de date (doar pentru userul logat)
     axios.get('http://localhost:3000/submissions', {
       headers: {
         Authorization: `Bearer ${token}`
@@ -46,7 +45,13 @@ export default function SubmissionsHistory() {
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {submissions.map((s: any) => (
-              <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+              /* MODIFICARE AICI: Am adăugat onClick și cursor-pointer pentru navigare */
+              <tr 
+                key={s.id} 
+                onClick={() => navigate(`/submissions/${s.id}`)} 
+                className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
+                title="Click pentru a vedea codul sursă"
+              >
                 <td className="px-6 py-4">
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                     s.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
@@ -55,7 +60,13 @@ export default function SubmissionsHistory() {
                   </span>
                 </td>
                 <td className="px-6 py-4 font-mono text-slate-600 capitalize">{s.language}</td>
-                <td className="px-6 py-4 text-slate-600 italic">{s.output}</td>
+                <td className="px-6 py-4 text-slate-600 italic">
+                  {s.output}
+                  {/* Indicator vizual mic care apare la hover */}
+                  <span className="ml-2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold">
+                    VEZI COD →
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-right text-slate-400">
                   {new Date(s.createdAt).toLocaleDateString('ro-RO')}
                 </td>

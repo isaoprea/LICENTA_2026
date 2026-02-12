@@ -8,15 +8,18 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { JwtStrategy } from './auth/jwt.strategy';
-import { AdminController } from './admin.controller'; // Importă controllerul
-import { AdminGuard } from './auth/admin.guard'; // Importă garda
+import { AdminController } from './admin.controller'; 
+import { AdminGuard } from './auth/admin.guard';
+import { LessonsModule } from './lessons/lessons.module';
 
 @Module({
   imports: [
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'dev-secret',
       signOptions: { expiresIn: '7d' },
+
     }),
+    LessonsModule,
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
   providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard],

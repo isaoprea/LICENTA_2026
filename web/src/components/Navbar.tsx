@@ -43,13 +43,14 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex justify-between items-center shadow-sm">
       <div className="flex items-center gap-8">
         <Link to="/" className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
-          DevJudge
+          CodeOverload
         </Link>
         
         <div className="flex gap-6 text-slate-600 font-semibold text-sm">
           <Link to="/problems" className="hover:text-blue-600 transition-colors">Probleme</Link>
           <Link to="/submissions" className="hover:text-blue-600 transition-colors">Istoric</Link>
           <Link to="/" className="hover:text-blue-600 transition-colors">Dashboard</Link>
+          <Link to="/lessons" className="hover:text-blue-600 transition-colors">Lecții</Link>
           
           {/* Apare link-ul de Admin doar dacă rolul este ADMIN */}
           {userData?.role === 'ADMIN' && (

@@ -4,48 +4,53 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
-}
+ }
 
 model User {
   id          String       @id @default(uuid())
   email       String       @unique
-  password    String       // Parola va fi salvată hash-uită (criptată)
+  password    String       
   name        String?
-  submissions Submission[] // Relația: Un utilizator poate avea mai multe încercări
+  submissions Submission[] 
   createdAt   DateTime     @default(now())
   role        String       @default("USER")
 }
 
 model Lesson {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String
-  createdAt   DateTime @default(now())
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  problems    Problem[] 
 }
 
 model Problem {
   id          String       @id @default(uuid())
   title       String
   description String
-  difficulty  String       // Easy, Medium, Hard
-  testCases   Json         // Array of { input: string, output: string }
+  difficulty  String
+  testCases   Json
+  lessonId    Int?         
+  lesson      Lesson?      @relation(fields: [lessonId], references: [id])
   submissions Submission[]
 }
 
 model Submission {
-  id        String   @id @default(uuid())
-  code      String
-  language  String
-  status    String   @default("PENDING") // PENDING, SUCCESS, WRONG_ANSWER, ERROR
-  output    String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  code        String
+  language    String
+  status      String   @default("PENDING") 
+  output      String?
+  
+  // LIPSEA: Pentru a salva detaliile Test Case-urilor (Input/Expected/Actual)
+  testResults Json?    
+  
+  createdAt   DateTime @default(now())
 
-  // Legătura cu Problema (deja existentă)
-  problemId String
-  problem   Problem @relation(fields: [problemId], references: [id])
+  problemId   String
+  problem     Problem  @relation(fields: [problemId], references: [id])
 
-  // NOU: Legătura cu Utilizatorul
-  userId    String?
-  user      User?   @relation(fields: [userId], references: [id])
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
 }

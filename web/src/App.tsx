@@ -5,8 +5,11 @@ import ProblemsList from './pages/ProblemsList';
 import ProblemDetail from './pages/ProblemDetail';
 import SubmissionsHistory from './pages/SubmissionsHistory';
 import Login from './pages/Login';
-import Register from './pages/Register'; // 1. IMPORTUL lipsea
+import Register from './pages/Register'; 
 import AdminPanel from './pages/AdminPanel';
+import SubmissionDetails from './pages/SubmissionDetails';
+import LessonDetails from './pages/LessonDetails';
+import Lessons from './pages/Lessons';
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/submissions/:id" element={<SubmissionDetails />} />
+            <Route path="/lessons" element={<Lessons />} />
+            <Route path="/lessons/:id" element={<LessonDetails />} />
           </Routes>
         </main>
       </div>

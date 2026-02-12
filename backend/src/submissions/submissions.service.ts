@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import axios from 'axios';
 
@@ -19,7 +19,8 @@ export class SubmissionsService {
     const versions: Record<string, string> = { 
       javascript: "18.15.0", 
       python: "3.10.0",
-      java: "17.0.2" 
+      java: "17.0.2",
+      cpp: "10.2.0" // Suport pentru C++
     };
 
     const payload = {
@@ -30,10 +31,10 @@ export class SubmissionsService {
     };
 
     const response = await axios.post(url, payload);
+    // Returnăm output-ul curățat de spații inutile
     return response.data.run.output.trim(); 
   }
 
-  // MODIFICARE: Adăugăm userId ca al patrulea parametru
   async judgeSubmission(problemId: string, userCode: string, language: string, userId: string) {
     const problem = await this.prisma.problem.findUnique({
       where: { id: problemId }
@@ -47,7 +48,10 @@ export class SubmissionsService {
 
     for (const test of testCases) {
       try {
-        const actualOutput = await this.callPiston(language, userCode, test.input);
+        // REPARARE: Transformăm textul "\n" în linie nouă reală pentru C++
+        const cleanInput = test.input.toString().replace(/\\n/g, '\n');
+
+        const actualOutput = await this.callPiston(language, userCode, cleanInput);
         const expectedOutput = (test.output || "").toString().trim();
         const isCorrect = actualOutput === expectedOutput;
 
@@ -71,15 +75,16 @@ export class SubmissionsService {
 
     const isAllPassed = testCases.length > 0 && passedCount === testCases.length;
 
-    // MODIFICARE: Salvăm userId în baza de date
+    // REPARARE EROARE TIP: Adăugăm 'as any' pentru a permite salvarea JSON-ului
     await this.prisma.submission.create({
       data: {
         problemId: problemId,
         code: userCode,
         language: language,
-        userId: userId, // Legătura critică cu utilizatorul logat
+        userId: userId, 
         status: isAllPassed ? "SUCCESS" : "WRONG_ANSWER",
         output: `Trecute: ${passedCount}/${testCases.length}`,
+        testResults: details as any 
       }
     });
 
@@ -89,5 +94,27 @@ export class SubmissionsService {
       total: testCases.length,
       details
     };
+  }
+
+  async getOne(id: string, userId: string, role: string) {
+    const submission = await this.prisma.submission.findUnique({
+      where: { id },
+      include: { 
+        problem: {
+          select: { title: true } 
+        } 
+      }
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submisia nu a fost găsită');
+    }
+
+    // Verificăm drepturile de acces
+    if (submission.userId !== userId && role !== 'ADMIN') {
+      throw new ForbiddenException('Nu ai permisiunea de a vedea această submisie');
+    }
+
+    return submission;
   }
 }

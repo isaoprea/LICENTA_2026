@@ -61,6 +61,7 @@ export default function ProblemDetail() {
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
             <option value="java">Java</option>
+            <option value="cpp">C++</option>
           </select>
           <button onClick={handleRun} disabled={loading} style={{ backgroundColor: '#007bff', color: '#fff', border: 'none', padding: '8px 25px', borderRadius: '4px', cursor: 'pointer' }}>
             {loading ? 'Se rulează...' : 'Run Code'}

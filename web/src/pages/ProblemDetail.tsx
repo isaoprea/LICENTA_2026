@@ -22,6 +22,11 @@ export default function ProblemDetail() {
     setResults(null);
     try {
       const token = localStorage.getItem('token'); // Preia token-ul salvat la login
+      if (!token) {
+        alert('Nu ești autentificat. Te rog să te loghezi.');
+        setLoading(false);
+        return;
+      }
       
       const res = await axios.post('http://localhost:3000/submissions/run', {
         problemId: id,
@@ -34,8 +39,15 @@ export default function ProblemDetail() {
       });
       setResults(res.data);
     } catch (err: any) {
+      const status = err.response?.status;
+      const message = err.response?.data?.message || err.message;
       console.error('Eroare:', err.response?.data || err.message);
-      alert("Eroare la verificarea codului! Asigură-te că ești autentificat.");
+      if (status === 401) {
+        localStorage.removeItem('token');
+        alert('Sesiunea a expirat. Te rog să te loghezi din nou.');
+      } else {
+        alert(`Eroare la verificarea codului: ${message}`);
+      }
     } finally {
       setLoading(false);
     }

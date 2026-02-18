@@ -1,7 +1,10 @@
 version: '3.8'
+
 services:
+  # Baza de date pentru aplicația ta NestJS
   db:
-    image: postgres
+    image: postgres:15-alpine
+    container_name: licenta-db
     restart: always
     environment:
       POSTGRES_USER: user
@@ -9,3 +12,22 @@ services:
       POSTGRES_DB: licenta_db
     ports:
       - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Motorul de execuție Piston
+  piston:
+    image: ghcr.io/engineer-man/piston:latest
+    container_name: piston-engine
+    restart: always
+    privileged: true # Esențial pentru a evita eroarea "isolate/"
+    ports:
+      - '2000:2000'
+    environment:
+      - PISTON_ISOLATE_DIR=/piston/isolate
+    volumes:
+      - piston_data:/piston/isolate
+
+volumes:
+  postgres_data:
+  piston_data:

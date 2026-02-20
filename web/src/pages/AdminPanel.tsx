@@ -39,26 +39,26 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto bg-white shadow-lg rounded-xl mt-10">
-      <h1 className="text-2xl font-bold mb-6 text-slate-800">Panou Administrare: Adaugă Problemă</h1>
+    <div className="p-8 max-w-4xl mx-auto bg-white dark:bg-slate-900 shadow-lg rounded-xl mt-10 border border-slate-200 dark:border-slate-700">
+      <h1 className="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-50">Panou Administrare: Adaugă Problemă</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Titlu Problemă</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Titlu Problemă</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} required
-            className="w-full mt-1 p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500" />
+            className="w-full mt-1 p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Descriere (Cerință)</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Descriere (Cerință)</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} required
-            className="w-full mt-1 p-2 border border-slate-300 rounded-md h-32" />
+            className="w-full mt-1 p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 h-32" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Dificultate</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dificultate</label>
           <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full mt-1 p-2 border border-slate-300 rounded-md">
+            className="w-full mt-1 p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50">
             <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
@@ -66,23 +66,23 @@ export default function AdminPanel() {
         </div>
 
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700">Test Cases (Date de test)</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Test Cases (Date de test)</label>
           {testCases.map((tc, index) => (
-            <div key={index} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div key={index} className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
               <div className="flex-1">
                 <input placeholder="Input (ex: 9\n2 7 11)" value={tc.input} 
                   onChange={(e) => updateTestCase(index, 'input', e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded text-sm font-mono" />
+                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50" />
               </div>
               <div className="flex-1">
                 <input placeholder="Output așteptat (ex: 0 1)" value={tc.output}
                   onChange={(e) => updateTestCase(index, 'output', e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded text-sm font-mono" />
+                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50" />
               </div>
             </div>
           ))}
           <button type="button" onClick={addTestCase}
-            className="text-sm text-blue-600 font-semibold hover:text-blue-800 transition">
+            className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 transition">
             + Adaugă încă un test case
           </button>
         </div>

@@ -53,43 +53,53 @@ export default function ProblemDetail() {
     }
   };
 
-  if (!problem) return <div style={{ padding: '40px' }}>Se încarcă...</div>;
+  if (!problem) return <div className="p-10 text-center text-slate-600 dark:text-slate-400 animate-pulse">Se încarcă...</div>;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
+    <div className="flex h-[calc(100vh-60px)] bg-slate-50 dark:bg-slate-950">
       {/* Panoul Stâng: Descriere */}
-      <div style={{ flex: 1, padding: '30px', borderRight: '1px solid #ddd', overflowY: 'auto', backgroundColor: '#fff' }}>
-        <h1 style={{ marginBottom: '10px' }}>{problem.title}</h1>
-        <span style={{ backgroundColor: '#e9ecef', padding: '4px 12px', borderRadius: '15px', fontSize: '0.8em', fontWeight: 'bold' }}>
+      <div className="flex-1 p-8 border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-50 mb-4">{problem.title}</h1>
+        <span className="inline-block bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-1.5 rounded-full text-sm font-bold mb-6">
           {problem.difficulty}
         </span>
-        <p style={{ marginTop: '25px', lineHeight: '1.6', fontSize: '1.1em' }}>{problem.description}</p>
+        <p className="mt-6 leading-relaxed text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{problem.description}</p>
       </div>
 
       {/* Panoul Drept: Editor și Rezultate */}
-      <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', padding: '20px', gap: '15px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ padding: '5px' }}>
+      <div className="flex-1 flex flex-col p-5 gap-4 bg-white dark:bg-slate-900">
+        <div className="flex justify-between items-center">
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200 dark:border-slate-700 font-bold">
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
             <option value="java">Java</option>
             <option value="cpp">C++</option>
           </select>
-          <button onClick={handleRun} disabled={loading} style={{ backgroundColor: '#007bff', color: '#fff', border: 'none', padding: '8px 25px', borderRadius: '4px', cursor: 'pointer' }}>
+          <button 
+            onClick={handleRun} 
+            disabled={loading} 
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
             {loading ? 'Se rulează...' : 'Run Code'}
           </button>
         </div>
 
-        <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="flex-1 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
           <Editor height="100%" language={language} theme="vs-dark" value={code} onChange={(v) => setCode(v || '')} />
         </div>
 
         {results && (
-          <div style={{ height: '150px', padding: '15px', backgroundColor: results.success ? '#d4edda' : '#f8d7da', borderRadius: '4px', overflowY: 'auto' }}>
-            <h4 style={{ margin: 0 }}>Status: {results.success ? "✅ SUCCESS" : "❌ FAILED"}</h4>
-            <p>Teste trecute: {results.passed} / {results.total}</p>
+          <div className={`p-4 rounded-lg max-h-40 overflow-y-auto border-t-4 ${
+            results.success 
+              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-900 dark:text-emerald-100' 
+              : 'bg-rose-50 dark:bg-rose-900/20 border-rose-500 text-rose-900 dark:text-rose-100'
+          }`}>
+            <h4 className="font-bold mb-2">Status: {results.success ? "✅ SUCCESS" : "❌ FAILED"}</h4>
+            <p className="mb-2">Teste trecute: {results.passed} / {results.total}</p>
             {results.details?.map((d: any, i: number) => (
-              <div key={i} style={{ fontSize: '0.85em' }}>Test {i+1}: {d.passed ? 'PASSED' : `FAILED (Expected: ${d.expected}, Got: ${d.actual})`}</div>
+              <div key={i} className="text-sm font-mono mb-1">
+                Test {i+1}: {d.passed ? '✅ PASSED' : `❌ FAILED (Expected: ${d.expected}, Got: ${d.actual})`}
+              </div>
             ))}
           </div>
         )}

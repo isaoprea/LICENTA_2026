@@ -17,11 +17,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl shadow-lg w-96 border border-slate-200">
-        <h2 className="text-2xl font-black mb-6 text-slate-900 text-center text-blue-600">CodeOverload Login</h2>
-        <input type="email" placeholder="Email" className="w-full mb-4 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onChange={e => setEmail(e.target.value)} />
-        <input type="password" placeholder="Parolă" className="w-full mb-6 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onChange={e => setPassword(e.target.value)} />
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <form onSubmit={handleLogin} className="bg-white dark:bg-slate-900 p-8 rounded-xl shadow-lg w-96 border border-slate-200 dark:border-slate-700">
+        <h2 className="text-2xl font-black mb-6 text-blue-600 text-center">CodeOverload Login</h2>
+        <input type="email" placeholder="Email" className="w-full mb-4 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border-slate-200 dark:border-slate-700" onChange={e => setEmail(e.target.value)} />
+        <input type="password" placeholder="Parolă" className="w-full mb-6 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border-slate-200 dark:border-slate-700" onChange={e => setPassword(e.target.value)} />
         <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md">Intră în cont</button>
       </form>
     </div>

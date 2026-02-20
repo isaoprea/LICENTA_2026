@@ -159,16 +159,16 @@ export class SubmissionsService {
 
     // Salvarea finală în baza de date
     await this.prisma.submission.create({
-      data: {
-        problemId,
-        code: userCode,
-        language,
-        userId, 
-        status: isAllPassed ? "SUCCESS" : "WRONG_ANSWER",
-        output: `Rezultat: ${passedCount}/${testCases.length} teste trecute`,
-        testResults: details as any 
-      }
-    });
+  data: {
+    problemId: String(problemId), // Asigură-te că ID-ul problemei este număr
+    code: userCode,
+    language: language,
+    userId: String(userId),      // REPARARE CRITICĂ: Salvăm ca String
+    status: isAllPassed ? "SUCCESS" : "WRONG_ANSWER", // Trebuie să fie exact "SUCCESS"
+    output: `Rezultat: ${passedCount}/${testCases.length} teste trecute`,
+    testResults: details as any 
+  }
+});
 
     return {
       success: isAllPassed,

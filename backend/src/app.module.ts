@@ -11,6 +11,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
 import { AdminController } from './admin.controller'; 
 import { AdminGuard } from './auth/admin.guard';
 import { LessonsModule } from './lessons/lessons.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LessonsModule } from './lessons/lessons.module';
 
     }),
     LessonsModule,
+    UsersModule,
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
   providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard],

@@ -4,7 +4,7 @@
 
 /* Adăugăm câteva setări de bază pentru a arăta mai bine */
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased transition-colors duration-300;
   margin: 0;
   display: block; /* Eliminăm centrarea forțată de Vite */
   min-height: 100vh;

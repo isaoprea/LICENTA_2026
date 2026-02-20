@@ -1,11 +1,17 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Adăugăm câteva setări de bază pentru a arăta mai bine */
-body {
-  @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased transition-colors duration-300;
-  margin: 0;
-  display: block; /* Eliminăm centrarea forțată de Vite */
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+  }
+  
+  /* Când clasa .dark este pe <html>, aplicăm aceste stiluri pe body */
+  html.dark body {
+    @apply bg-[#020617] text-slate-100;
+  }
 }
+
+/* Dacă ai stiluri custom din app.css, le poți pune aici jos */

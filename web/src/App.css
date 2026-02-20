@@ -1,16 +1,2 @@
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    /* Fundalul de bază pentru Light Mode */
-    @apply bg-slate-50 text-slate-900 transition-colors duration-300 min-h-screen;
-  }
-
-  /* Când clasa .dark este prezentă pe <html>, body-ul se schimbă automat */
-  .dark body {
-    @apply bg-[#020617] text-slate-100;
-  }
-}
+/* App.css - Stiluri specifice componentei App și overrides */
+/* Stilurile globale sunt în index.css */

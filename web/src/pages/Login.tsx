@@ -12,7 +12,7 @@ export default function Login() {
     try {
       const res = await axios.post('http://localhost:3000/auth/login', { email, password });
       localStorage.setItem('token', res.data.access_token); // Salvăm cheia
-      navigate('/'); // Mergem la Dashboard
+      navigate('/dashboard'); // Mergem la Dashboard
     } catch (err) { alert("Login eșuat!"); }
   };
 

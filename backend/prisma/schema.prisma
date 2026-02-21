@@ -16,6 +16,8 @@ model User {
   submissions Submission[] 
   createdAt   DateTime     @default(now())
   role        String       @default("USER")
+  streak      Int          @default(0)
+  lastActivityDate DateTime  @default(now())
 }
 
 // 1. ADAUGĂM MODELUL MODULE

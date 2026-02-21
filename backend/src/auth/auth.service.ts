@@ -17,7 +17,8 @@ export class AuthService {
         email, 
         password: hashedPassword, 
         name,
-        role: "USER" // Toți utilizatorii noi sunt USER implicit
+        role: "USER",
+        streak: 0 // Inițializăm foculețele la 0
       },
     });
   }
@@ -29,7 +30,6 @@ export class AuthService {
       throw new UnauthorizedException('Date incorecte');
     }
 
-    // MODIFICARE CRITICĂ: Includem rolul în payload
     const payload = { 
       email: user.email, 
       sub: user.id, 
@@ -40,5 +40,45 @@ export class AuthService {
     return { 
       access_token: this.jwtService.sign(payload) 
     };
+  }
+
+  // --- METODA NOUĂ PENTRU STATISTICI REALE ---
+  async getUserStats(userId: string) {
+    // 1. Numărăm problemele rezolvate cu succes (status 'success')
+    // Notă: Verifică dacă în schema.prisma tabelul se numește 'submission' sau 'solution'
+    const solvedCount = await this.prisma.submission.count({
+      where: {
+        userId: userId,
+        status: {
+          in: ['SUCCESS', 'success'] 
+        }
+      },
+    });
+
+    // 2. Numărăm toate încercările făcute de utilizator
+    const totalAttempts = await this.prisma.submission.count({
+      where: {
+        userId: userId,
+      },
+    });
+
+    // 3. Calculăm rata de succes
+    const successRate = totalAttempts > 0 
+      ? Math.round((solvedCount / totalAttempts) * 100) 
+      : 0;
+
+    return {
+      solvedCount,
+      totalAttempts,
+      successRate,
+    };
+  }
+
+  // --- METODA PENTRU PROFIL (Nume + Streak) ---
+  async findUserById(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, streak: true, email: true, role: true }
+    });
   }
 }

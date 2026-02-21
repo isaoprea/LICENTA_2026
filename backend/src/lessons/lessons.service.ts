@@ -45,11 +45,7 @@ export class LessonsService {
 
           isCompleted = !!successSubmission;
           
-          if (isCompleted) {
-            console.log(`✅ GĂSIT! Userul a cucerit teritoriul: ${lesson.title}`);
-          } else {
-            console.log(`❌ NU S-A GĂSIT nicio submisiune "SUCCESS" în DB pentru acest user și această problemă.`);
-          }
+          
         }
 
         const isLocked = !previousLessonCompleted;

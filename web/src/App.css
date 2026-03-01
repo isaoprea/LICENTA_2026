@@ -1,2 +1,16 @@
-/* App.css - Stiluri specifice componentei App și overrides */
-/* Stilurile globale sunt în index.css */
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    /* Nu folosi !important aici pentru a lăsa clasele din pagini să funcționeze */
+    @apply bg-white text-slate-900 transition-colors duration-300;
+  }
+
+  /* Doar dacă vrei un fundal implicit pentru orice pagină care nu are clasă de bg */
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}

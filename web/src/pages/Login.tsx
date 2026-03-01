@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Mail, LogIn } from 'lucide-react';
 
-export default function Login() {
+export default function Login({onLoginSuccess}: { onLoginSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -16,13 +16,12 @@ export default function Login() {
     try {
       const res = await axios.post('http://localhost:3000/auth/login', { email, password });
       
-      // 1. Salvăm token-ul nou
       localStorage.setItem('token', res.data.access_token); 
 
-      // 2. MODIFICARE CRITICĂ: Anunțăm Dashboard-ul că utilizatorul s-a schimbat
-      window.dispatchEvent(new Event('auth-change')); 
+      window.dispatchEvent(new Event('auth-change'));
+      
+      onLoginSuccess();
 
-      // 3. Mergem la Dashboard
       navigate('/dashboard'); 
     } catch (err) { 
       alert("Email sau parolă incorectă!"); 
@@ -32,7 +31,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden p-4">
       
-      {/* --- FUNDAL DECORATIV (CYBER GRID) --- */}
+ 
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />

@@ -20,13 +20,14 @@ services:
     image: ghcr.io/engineer-man/piston:latest
     container_name: piston-engine
     restart: always
-    privileged: true # Esențial pentru a evita eroarea "isolate/"
+    privileged: true 
     ports:
       - '2000:2000'
     environment:
       - PISTON_ISOLATE_DIR=/piston/isolate
     volumes:
       - piston_data:/piston/isolate
+
 
 volumes:
   postgres_data:

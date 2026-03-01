@@ -11,12 +11,14 @@ import {
 import { PrismaService } from './prisma.service';
 import { SubmissionsService } from './submissions/submissions.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { AiService } from './ai/ai.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly submissionsService: SubmissionsService,
+    private readonly aiService: AiService
   ) {}
 
   @Get('problems')
@@ -87,5 +89,24 @@ export class AppController {
         ? Math.round((solvedCount / totalAttempts) * 100) 
         : 0
     };
+
+
+    
   }
+  // backend/src/app.controller.ts
+
+@UseGuards(JwtAuthGuard)
+@Post('ai/explain')
+async explainError(@Body() data: { problemId: string, code: string, error: string }) {
+  const problem = await this.prisma.problem.findUnique({ 
+    where: { id: data.problemId } 
+  });
+
+  
+  if (!problem) {
+    throw new NotFoundException('Problema specificată nu a fost găsită în baza de date.');
+  }
+
+  return this.aiService.cereAjutor(problem.title, data.code, data.error);
+}
 }

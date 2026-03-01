@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
+import { TeacherDashboard } from './pages/TeacherDashboard';
 import ProblemsList from './pages/ProblemsList';
 import ProblemDetail from './pages/ProblemDetail';
 import SubmissionsHistory from './pages/SubmissionsHistory';
@@ -14,8 +16,29 @@ import LanguageSelection from './pages/LanguageSelection';
 import Profile from './pages/Profile';
 
 function App() {
-  // Verificăm dacă există un token în stocarea locală
-  const isAuthenticated = !!localStorage.getItem('token');
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  useEffect(() => {
+    const handleStorageChange = () => setToken(localStorage.getItem('token'));
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const isAuthenticated = !!token;
+  let userRole = null;
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userRole = payload.role;
+    } catch (e) {
+      console.error("Token invalid");
+    }
+  }
+
+  const handleAuthChange = () => {
+    setToken(localStorage.getItem('token'));
+  };
 
   return (
     <Router>
@@ -23,39 +46,31 @@ function App() {
         <Navbar />
         <main className="flex-1">
           <Routes>
-            {/* 1. PAGINA DE START: Acum redirecționează direct la Dashboard */}
             <Route 
               path="/" 
               element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
             />
-            
-            {/* 2. DASHBOARD: Centrul tău de comandă */}
-            <Route path="/dashboard" element={<Dashboard />} />
-
-            {/* Selecția Limbajului (mutată de pe prima pagină) */}
+            <Route 
+              path="/dashboard" 
+              element={
+                isAuthenticated ? (
+                  userRole === 'TEACHER' ? <TeacherDashboard /> : <Dashboard />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              } 
+            />
             <Route path="/select-language" element={<LanguageSelection />} />
-            
-            {/* Listă Module filtrate (ex: /lessons/python) */}
             <Route path="/lessons/:language" element={<Lessons />} />
-            
-            {/* Conținut Lecție (ex: /lesson/5) */}
             <Route path="/lesson/:id" element={<LessonDetails />} />
-            
-            {/* Profil și Progres utilizator */}
             <Route path="/profile" element={<Profile />} />
-            
-            {/* Probleme și Administrare */}
             <Route path="/problems" element={<ProblemsList />} />
             <Route path="/problem/:id" element={<ProblemDetail />} />
             <Route path="/submissions" element={<SubmissionsHistory />} />
             <Route path="/submissions/:id" element={<SubmissionDetails />} />
-            
-            {/* Autentificare */}
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login onLoginSuccess={handleAuthChange} />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/admin" element={<AdminPanel />} />
-
-            {/* Redirecționare pentru orice altă rută inexistentă */}
+            <Route path="/admin" element={userRole === 'TEACHER' ? <AdminPanel /> : <Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

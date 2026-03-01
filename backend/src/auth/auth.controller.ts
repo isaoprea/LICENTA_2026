@@ -1,10 +1,14 @@
-import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard'; // Asigură-te că acest fișier există în folderul auth
+import { JwtAuthGuard } from './jwt-auth.guard'; 
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly prisma: PrismaService 
+  ) {}
 
   @Post('register')
   register(@Body() body: { email: string; password: string; name: string }) {
@@ -16,21 +20,29 @@ export class AuthController {
     return this.auth.login(body.email, body.password);
   }
 
-  
-
-  @UseGuards(JwtAuthGuard) // Această linie verifică token-ul JWT trimis de Frontend
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req) {
-    // req.user este extras automat din token de către JwtStrategy
-    // Returnează datele de profil (nume, streak etc.)
-    return req.user; 
+  async getProfile(@Request() req: any) {
+    const userId = req.user.userId || req.user.sub || req.user.id; 
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,  
+        role: true,
+        streak: true
+      }
+    });
+
+    return user;
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('stats/me')
-  async getMyStats(@Req() req) {
-    // Aici apelăm o metodă din service care calculează statisticile utilizatorului
-    // req.user.id (sau sub) este ID-ul extras din token
-    return this.auth.getUserStats(req.user.id);
+  async getMyStats(@Req() req: any) {
+    const userId = req.user.userId || req.user.sub || req.user.id;
+    return this.auth.getUserStats(userId);
   }
 }

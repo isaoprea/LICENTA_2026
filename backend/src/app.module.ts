@@ -12,7 +12,10 @@ import { AdminController } from './admin.controller';
 import { AdminGuard } from './auth/admin.guard';
 import { LessonsModule } from './lessons/lessons.module';
 import { UsersModule } from './users/users.module';
-
+import { AiService } from './ai/ai.service';
+import { ClassroomsModule } from './classrooms/classrooms.module';
+import {PrismaModule} from './prisma/prisma.module';
+import { NotificationsModule } from './notifications/notifications.module';
 @Module({
   imports: [
     JwtModule.register({
@@ -22,8 +25,11 @@ import { UsersModule } from './users/users.module';
     }),
     LessonsModule,
     UsersModule,
+    ClassroomsModule,
+    PrismaModule,
+    NotificationsModule,
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
-  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard],
+  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard, AiService],
 })
 export class AppModule {}

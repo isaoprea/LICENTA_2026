@@ -16,6 +16,8 @@ import { AiService } from './ai/ai.service';
 import { ClassroomsModule } from './classrooms/classrooms.module';
 import {PrismaModule} from './prisma/prisma.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import {ProblemsModule} from './problems/problems.module';
+import { ChatModule } from './chat/chat.module';
 @Module({
   imports: [
     JwtModule.register({
@@ -28,6 +30,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     ClassroomsModule,
     PrismaModule,
     NotificationsModule,
+    ProblemsModule,
+    ChatModule
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
   providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard, AiService],

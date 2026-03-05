@@ -3,9 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class AiService {
-  // Punem cheia direct aici pentru testul final
   private genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-private model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" }); 
+private model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
  async cereAjutor(problema: string, cod: string, eroare: string) {
     console.log("--- Apel Mentor AI pentru problema:", problema, "---");
     

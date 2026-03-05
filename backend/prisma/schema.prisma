@@ -20,6 +20,8 @@ model User {
 
   id               String         @id @default(uuid())
 
+  messages  Message[]
+
   email            String         @unique
 
   password         String
@@ -46,9 +48,16 @@ model User {
 
   notifications     Notification[]
 
+  createdProblems Problem[]        @relation("ProblemAuthor")
+
+
 }
 
-
+enum ProblemType  {
+  LESSON //Probleme pt progresul lectiilor
+  PRACTICE // probleme pt exersare
+  HOMEWORK // probleme create direct de prof pentru teme 
+}
 
 model Module {
 
@@ -105,6 +114,11 @@ model Problem {
   difficulty  String
 
   testCases   Json
+
+  type        ProblemType @default (PRACTICE)
+  authorId    String?     //pt problemele create de autor
+  author      User?       @relation("ProblemAuthor", fields: [authorId], references: [id])
+
 
   lessonId    Int?
 
@@ -216,4 +230,23 @@ model Notification {
 
   createdAt DateTime @default(now())
 
+}
+
+model Channel {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  messages  Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id]) 
+  
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id])
 }

@@ -21,17 +21,22 @@ export class AppController {
     private readonly aiService: AiService
   ) {}
 
+  /*  Această rută intră în conflict cu ProblemsController
   @Get('problems')
   async getProblems() {
     return this.prisma.problem.findMany();
   }
+  */
 
+  /*  Aceasta este "vinovata" pentru eroarea 404! 
+     Ea crede că "practice" din URL este un ID și caută în baza de date după el.
   @Get('problems/:id')
   async getProblem(@Param('id') id: string) {
     const problem = await this.prisma.problem.findUnique({ where: { id } });
     if (!problem) throw new NotFoundException('Problema nu a fost găsită');
     return problem;
   }
+  */
 
   @UseGuards(JwtAuthGuard) 
   @Post('submissions/run')
@@ -58,22 +63,19 @@ export class AppController {
     });
   }
 
-  // --- RUTĂ SINCRONIZATĂ PENTRU DASHBOARD ---
   @UseGuards(JwtAuthGuard)
   @Get('user/stats')
   async getUserStats(@Request() req) {
     const userId = req.user.userId;
 
-    // 1. Numărăm totalul de încercări
     const totalAttempts = await this.prisma.submission.count({
       where: { userId }
     });
 
-    // 2. Numărăm problemele unice rezolvate cu succes
     const acceptedSubmissions = await this.prisma.submission.findMany({
       where: { 
         userId,
-        status: { in: ['SUCCESS', 'success'] } // Sincronizat cu SubmissionsService
+        status: { in: ['SUCCESS', 'success'] }
       },
       distinct: ['problemId'],
       select: { problemId: true }
@@ -81,7 +83,6 @@ export class AppController {
 
     const solvedCount = acceptedSubmissions.length;
 
-    // 3. Returnăm obiectul exact cum îl așteaptă Frontend-ul
     return {
       totalAttempts,
       solvedCount,
@@ -89,24 +90,19 @@ export class AppController {
         ? Math.round((solvedCount / totalAttempts) * 100) 
         : 0
     };
-
-
-    
-  }
-  // backend/src/app.controller.ts
-
-@UseGuards(JwtAuthGuard)
-@Post('ai/explain')
-async explainError(@Body() data: { problemId: string, code: string, error: string }) {
-  const problem = await this.prisma.problem.findUnique({ 
-    where: { id: data.problemId } 
-  });
-
-  
-  if (!problem) {
-    throw new NotFoundException('Problema specificată nu a fost găsită în baza de date.');
   }
 
-  return this.aiService.cereAjutor(problem.title, data.code, data.error);
-}
+  @UseGuards(JwtAuthGuard)
+  @Post('ai/explain')
+  async explainError(@Body() data: { problemId: string, code: string, error: string }) {
+    const problem = await this.prisma.problem.findUnique({ 
+      where: { id: data.problemId } 
+    });
+
+    if (!problem) {
+      throw new NotFoundException('Problema specificată nu a fost găsită în baza de date.');
+    }
+
+    return this.aiService.cereAjutor(problem.title, data.code, data.error);
+  }
 }

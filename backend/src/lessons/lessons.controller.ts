@@ -9,7 +9,6 @@ export class LessonsController {
   @Get('modules/:language')
   @UseGuards(JwtAuthGuard)
   async getModulesByLanguage(@Param('language') language: string, @Request() req) {
-    // REPARARE: Strategia ta returnează "userId", deci îl extragem exact așa
     const id = req.user?.userId;
 
     if (!id) {

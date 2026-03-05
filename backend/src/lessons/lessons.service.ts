@@ -7,15 +7,18 @@ export class LessonsService {
   constructor(private prisma: PrismaService) {}
 
   async findModulesByLanguage(language: string, userId: any) {
-    console.log(`--- START DIAGNOSTICARE HARTĂ ---`);
-    console.log(`Limbaj căutat: ${language}, User ID primit: ${userId}`);
-
+    
     const modules = await this.prisma.module.findMany({
       where: { language: language.toLowerCase() },
       include: {
         lessons: {
           orderBy: { order: 'asc' },
-          include: { problems: { select: { id: true } } },
+          include: {
+             problems: {
+               where : {type: 'LESSON'},
+               select: { id :true   }
+             }
+            },
         },
       },
       orderBy: { order: 'asc' },
@@ -27,19 +30,16 @@ export class LessonsService {
     for (const mod of modules) {
       const processedLessons: any[] = [];
       for (const lesson of mod.lessons) {
-        // Luăm ID-ul problemei asociate
         const problemId = lesson.problems[0]?.id;
         let isCompleted = false;
 
         if (problemId) {
-          // VERIFICARE: Ce caută Prisma mai exact?
-          console.log(`Căutăm succes pentru Lecția: "${lesson.title}" | Problem ID: ${problemId} | User ID: ${userId}`);
 
           const successSubmission = await this.prisma.submission.findFirst({
             where: {
               userId: String(userId),
               problemId: String(problemId),
-              status: 'SUCCESS', // Trebuie să fie identic cu ce salvezi în SubmissionsService
+              status: 'SUCCESS', 
             },
           });
 
@@ -59,13 +59,20 @@ export class LessonsService {
   }
 
   async findAll() {
-    return this.prisma.lesson.findMany({ orderBy: { order: 'asc' }, include: { problems: true } });
+    return this.prisma.lesson.findMany({ 
+      orderBy: { order: 'asc' },
+       include: { 
+        problems: {where :  {type : 'LESSON'}}
+       }
+      });
   }
 
   async findOne(id: string) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: Number(id) },
-      include: { problems: true, module: true }
+      include: {
+         problems: {where :  {type : 'LESSON'}},
+         module: true }
     });
     if (!lesson) throw new NotFoundException('Lecția nu a fost găsită');
     return lesson;

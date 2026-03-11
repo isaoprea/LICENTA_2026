@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import { Lightbulb, Loader2 } from 'lucide-react';
 
 export default function ProblemDetail() {
   const { id } = useParams(); // Preluăm ID-ul din URL
@@ -10,6 +11,8 @@ export default function ProblemDetail() {
   const [language, setLanguage] = useState('javascript');
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     axios.get(`http://localhost:3000/problems/${id}`).then(res => {
@@ -21,7 +24,7 @@ export default function ProblemDetail() {
     setLoading(true);
     setResults(null);
     try {
-      const token = localStorage.getItem('token'); // Preia token-ul salvat la login
+      const token = localStorage.getItem('token'); 
       if (!token) {
         alert('Nu ești autentificat. Te rog să te loghezi.');
         setLoading(false);
@@ -34,7 +37,7 @@ export default function ProblemDetail() {
         language
       }, {
         headers: {
-          'Authorization': `Bearer ${token}` // Adaugă token-ul în header
+          'Authorization': `Bearer ${token}` 
         }
       });
       setResults(res.data);
@@ -53,11 +56,49 @@ export default function ProblemDetail() {
     }
   };
 
+  const handleAskAI = async () => {
+    if (!results || results.success) {
+      alert('Cere ajutor doar când ai erori!');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Nu ești autentificat. Te rog să te loghezi.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiExplanation(null);
+
+    try {
+      const errorMessage = results.details
+        .filter((d: any) => !d.passed)
+        .map((d: any) => `Test: ${d.input} → Expected: ${d.expected}, Got: ${d.actual}`)
+        .join('\n');
+
+      const res = await axios.post('http://localhost:3000/ai/explain', {
+        problemId: id,
+        code,
+        error: errorMessage
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setAiExplanation(res.data);
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message;
+      setAiExplanation(`Eroare: ${message || 'Mentorul AI nu poate răspunde acum.'}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (!problem) return <div className="p-10 text-center text-slate-600 dark:text-slate-400 animate-pulse">Se încarcă...</div>;
 
   return (
     <div className="flex h-[calc(100vh-60px)] bg-slate-50 dark:bg-slate-950">
-      {/* Panoul Stâng: Descriere */}
+     
       <div className="flex-1 p-8 border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-50 mb-4">{problem.title}</h1>
         <span className="inline-block bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-1.5 rounded-full text-sm font-bold mb-6">
@@ -66,7 +107,7 @@ export default function ProblemDetail() {
         <p className="mt-6 leading-relaxed text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{problem.description}</p>
       </div>
 
-      {/* Panoul Drept: Editor și Rezultate */}
+      
       <div className="flex-1 flex flex-col p-5 gap-4 bg-white dark:bg-slate-900">
         <div className="flex justify-between items-center">
           <select value={language} onChange={(e) => setLanguage(e.target.value)} className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200 dark:border-slate-700 font-bold">
@@ -75,13 +116,34 @@ export default function ProblemDetail() {
             <option value="java">Java</option>
             <option value="cpp">C++</option>
           </select>
-          <button 
-            onClick={handleRun} 
-            disabled={loading} 
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Se rulează...' : 'Run Code'}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleRun} 
+              disabled={loading} 
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Se rulează...' : 'Run Code'}
+            </button>
+            {results && !results.success && (
+              <button 
+                onClick={handleAskAI} 
+                disabled={aiLoading} 
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Gândesc...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb size={16} />
+                    Stiu eu!
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
@@ -101,6 +163,16 @@ export default function ProblemDetail() {
                 Test {i+1}: {d.passed ? '✅ PASSED' : `❌ FAILED (Expected: ${d.expected}, Got: ${d.actual})`}
               </div>
             ))}
+          </div>
+        )}
+
+        {aiExplanation && (
+          <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-100">
+            <h4 className="font-bold mb-2 flex items-center gap-2">
+              <Lightbulb size={18} className="text-amber-500" />
+              Indices din Mentorul AI:
+            </h4>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{aiExplanation}</p>
           </div>
         )}
       </div>

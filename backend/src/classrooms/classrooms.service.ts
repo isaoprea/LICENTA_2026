@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { JoinClassroomDto } from './dto/join-classroom.dto';
@@ -76,6 +76,7 @@ export class ClassroomsService {
             problemId: dto.problemId,
             studentId: studentId,
             language: dto.language,
+            classroomId: dto.classroomId,
             status: 'PENDING'
           }
         });
@@ -153,4 +154,51 @@ export class ClassroomsService {
     }
   });
 }
+
+  async getStudentClassroomDetails(classroomId: string, userId: string) {
+    const classroom = await this.prisma.classroom.findFirst({
+      where: {
+        id: classroomId,
+        students: { some: { id: userId } }
+      },
+      include: {
+        teacher: { select: { id: true, name: true, email: true } },
+        students: { select: { id: true, name: true, email: true } },
+        assignments: {
+          where: { studentId: userId },
+          include: {
+            problem: { select: { title: true, difficulty: true } }
+          },
+          orderBy: { createdAt: 'desc' }
+        },
+        _count: { select: { students: true, assignments: true } }
+      }
+    });
+
+    if (!classroom) {
+      throw new NotFoundException('Clasa nu a fost găsită sau nu ai acces la ea.');
+    }
+
+    return classroom;
+  }
+
+  async getAssignmentByIdForUser(assignmentId: string, userId: string, role: string) {
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        problem: true,
+        classroom: { select: { name: true } }
+      }
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Tema nu a fost găsită.');
+    }
+
+    if (assignment.studentId !== userId && role !== 'TEACHER' && role !== 'ADMIN') {
+      throw new ForbiddenException('Nu ai permisiunea de a accesa această temă.');
+    }
+
+    return assignment;
+  }
 }

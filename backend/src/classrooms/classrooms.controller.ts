@@ -69,4 +69,11 @@ async getMyClassrooms(@Request() req) {
   const userId = req.user.userId || req.user.sub || req.user.id;
   return this.classroomsService.getStudentClassrooms(userId);
 }
+
+  @Get('student/:id/details')
+  @UseGuards(JwtAuthGuard)
+  async getStudentClassroomDetails(@Param('id') id: string, @Request() req) {
+    const userId = req.user.userId || req.user.sub || req.user.id;
+    return this.classroomsService.getStudentClassroomDetails(id, userId);
+  }
 }

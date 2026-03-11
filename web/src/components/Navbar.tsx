@@ -11,7 +11,8 @@ import {
   Palette, 
   Bell,
   CheckCheck,
-  Circle
+  Circle,
+  MessageSquare // Am adăugat și o iconiță opțională pentru context, deși folosim doar text
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -47,7 +48,6 @@ export default function Navbar() {
     }
   }, [isDark]);
 
-  // Logica pentru încărcarea notificărilor
   const fetchNotifications = async () => {
     if (!token) return;
     try {
@@ -62,7 +62,7 @@ export default function Navbar() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Verifică la fiecare 30 secunde
+    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [token]);
 
@@ -118,13 +118,14 @@ export default function Navbar() {
           <Link to="/submissions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Istoric</Link>
           <Link to="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Dashboard</Link>
           <Link to="/select-language" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Lecții</Link>
+          
+          <Link to="/community" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Comunitate</Link>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
         {token && userData && (
           <div className="relative">
-            {/* CLOPOȚEL NOTIFICĂRI */}
             <button 
               onClick={() => { setIsNotifOpen(!isNotifOpen); setIsDropdownOpen(false); }}
               className="relative p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all"

@@ -49,6 +49,7 @@ model User {
   notifications     Notification[]
 
   createdProblems Problem[]        @relation("ProblemAuthor")
+  messageReactions MessageReaction[]
 
 
 }
@@ -155,6 +156,8 @@ model Submission {
   userId      String?
 
   user        User?    @relation(fields: [userId], references: [id])
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
 
 }
 
@@ -210,6 +213,8 @@ model Assignment {
 
   createdAt   DateTime   @default(now())
 
+  submissions Submission[]
+
 }
 
 
@@ -249,4 +254,20 @@ model Message {
   
   channelId String
   channel   Channel  @relation(fields: [channelId], references: [id])
+  reactions MessageReaction[]
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  createdAt DateTime @default(now())
+
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
 }

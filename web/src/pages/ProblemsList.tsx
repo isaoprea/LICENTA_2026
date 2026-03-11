@@ -6,7 +6,7 @@ export default function ProblemsList() {
   const [problems, setProblems] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/problems').then(res => setProblems(res.data));
+    axios.get('http://localhost:3000/problems/practice').then(res => setProblems(res.data));
   }, []);
 
   const getDifficultyColor = (difficulty: string) => {

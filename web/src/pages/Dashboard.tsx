@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Trophy, 
-  Flame, 
   Target, 
   Activity, 
   Zap, 
@@ -22,10 +21,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState('');
-  const [userData, setUserData] = useState({ name: "", streak: 0 });
+  const [userData, setUserData] = useState({ name: "" });
   const [stats, setStats] = useState({ solved: 0, attempts: 0, successRate: 0 });
   const [assignments, setAssignments] = useState<any[]>([]);
   const [myClassrooms, setMyClassrooms] = useState<any[]>([]); // Stare nouă pentru clase
+  const [selectedClassroomDetails, setSelectedClassroomDetails] = useState<any>(null);
+  const [loadingClassroomDetails, setLoadingClassroomDetails] = useState(false);
   const [languages, setLanguages] = useState([
     { id: 'python', name: 'Python', progress: 0, color: 'bg-blue-500', icon: <Code2 size={18}/> },
     { id: 'cpp', name: 'C++', progress: 0, color: 'bg-cyan-500', icon: <Terminal size={18}/> },
@@ -45,8 +46,7 @@ export default function Dashboard() {
 
       const userRes = await axios.get('http://localhost:3000/auth/profile', { headers });
       setUserData({ 
-        name: userRes.data.name || "Utilizator",  
-        streak: userRes.data.streak || 0 
+        name: userRes.data.name || "Utilizator",
       });
 
       const statsRes = await axios.get('http://localhost:3000/user/stats', { headers });
@@ -102,6 +102,24 @@ export default function Dashboard() {
     }
   };
 
+  const handleOpenClassroomDetails = async (classroomId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setLoadingClassroomDetails(true);
+    try {
+      const res = await axios.get(`http://localhost:3000/classrooms/student/${classroomId}/details`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedClassroomDetails(res.data);
+    } catch (err) {
+      console.error('Eroare la încărcarea detaliilor clasei:', err);
+      alert('Nu am putut încărca detaliile clasei.');
+    } finally {
+      setLoadingClassroomDetails(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     window.addEventListener('auth-change', fetchData);
@@ -123,19 +141,9 @@ export default function Dashboard() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-black italic uppercase tracking-tighter">
-              Salut, <span className="text-blue-500">{(userData?.name || "Explorator").split(' ')[0]}!</span> 👋
+              Salut, <span className="text-blue-500">{(userData?.name || "Explorator").split(' ')[0]}!</span> 
             </h1>
             <p className="text-slate-400 font-bold mt-1">Sistemele sunt online pentru tine.</p>
-          </div>
-          
-          <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-2xl flex items-center gap-3">
-            <div className="bg-orange-500/20 p-2 rounded-xl">
-              <Flame className="text-orange-500" size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase">Streak</p>
-              <p className="text-lg font-black leading-none">{userData.streak} Zile</p>
-            </div>
           </div>
         </header>
 
@@ -200,7 +208,10 @@ export default function Dashboard() {
                           <span className="text-[9px] text-slate-600 font-black uppercase tracking-tighter">Sarcini alocate</span>
                           <span className="text-sm font-black text-slate-300">{cls._count?.assignments || 0} Teme active</span>
                         </div>
-                        <button className="text-[10px] font-black bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors uppercase">
+                        <button
+                          onClick={() => handleOpenClassroomDetails(cls.id)}
+                          className="text-[10px] font-black bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors uppercase"
+                        >
                           Detalii
                         </button>
                       </div>
@@ -212,6 +223,52 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+
+              {(loadingClassroomDetails || selectedClassroomDetails) && (
+                <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem]">
+                  {loadingClassroomDetails ? (
+                    <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
+                      <Loader2 className="animate-spin" size={16} /> Se încarcă detaliile clasei...
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="text-lg font-black uppercase italic">Detalii clasă: {selectedClassroomDetails?.name}</h4>
+                      <p className="text-xs text-slate-400 font-bold mt-1">Profesor: {selectedClassroomDetails?.teacher?.name} ({selectedClassroomDetails?.teacher?.email})</p>
+                      <p className="text-xs text-slate-500 mt-2">{selectedClassroomDetails?.description || 'Fără descriere'}</p>
+
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div className="bg-slate-800/40 rounded-xl p-3">
+                          <p className="text-[10px] text-slate-500 uppercase font-black">Colegi în clasă</p>
+                          <p className="text-xl font-black">{selectedClassroomDetails?._count?.students || 0}</p>
+                        </div>
+                        <div className="bg-slate-800/40 rounded-xl p-3">
+                          <p className="text-[10px] text-slate-500 uppercase font-black">Temele tale în clasă</p>
+                          <p className="text-xl font-black">{selectedClassroomDetails?.assignments?.length || 0}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        <p className="text-[10px] text-slate-500 uppercase font-black">Teme în această clasă</p>
+                        {selectedClassroomDetails?.assignments?.length > 0 ? (
+                          selectedClassroomDetails.assignments.map((asg: any) => (
+                            <div key={asg.id} className="flex items-center justify-between bg-slate-800/30 rounded-xl px-3 py-2">
+                              <div>
+                                <p className="text-sm font-bold">{asg.title}</p>
+                                <p className="text-[10px] text-slate-500">{asg.problem?.title} • {asg.language}</p>
+                              </div>
+                              <span className={`text-[10px] font-black px-2 py-1 rounded-md ${asg.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                {asg.status}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-slate-500">Nu ai teme în această clasă.</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8">
@@ -238,7 +295,7 @@ export default function Dashboard() {
                       key={asg.id}
                       whileHover={{ x: 5 }}
                       className="bg-slate-800/40 border border-white/5 p-4 rounded-2xl group cursor-pointer"
-                      onClick={() => navigate(`/problem/${asg.problemId}?lang=${asg.language}`)}
+                      onClick={() => navigate(`/assignment-solving/${asg.id}`)}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{asg.language}</span>

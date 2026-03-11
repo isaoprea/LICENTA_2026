@@ -3,4 +3,5 @@ export class CreateAssignmentDto {
   problemId: string;
   studentIds: string[]; 
   language: string;
+  classroomId?: string;
 }

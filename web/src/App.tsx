@@ -14,6 +14,8 @@ import LessonDetails from './pages/LessonDetails';
 import Lessons from './pages/Lessons';
 import LanguageSelection from './pages/LanguageSelection';
 import Profile from './pages/Profile';
+import AssignmentSolving from './pages/AssignmentSolving';
+import  CommunityChat  from './pages/CommunityChat';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -25,12 +27,18 @@ function App() {
   }, []);
 
   const isAuthenticated = !!token;
-  let userRole = null;
+  
+  // Extragem obiectul de user complet din token
+  let userData = null;
 
   if (token) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      userRole = payload.role;
+      userData = {
+        id: payload.userId || payload.sub, // ID-ul unic pentru legătura cu mesajele
+        role: payload.role,
+        name: payload.name || "Utilizator" // Folosit pentru afișarea numelui în chat
+      };
     } catch (e) {
       console.error("Token invalid");
     }
@@ -54,23 +62,37 @@ function App() {
               path="/dashboard" 
               element={
                 isAuthenticated ? (
-                  userRole === 'TEACHER' ? <TeacherDashboard /> : <Dashboard />
+                  userData?.role === 'TEACHER' ? <TeacherDashboard /> : <Dashboard />
                 ) : (
                   <Navigate to="/login" replace />
                 )
               } 
             />
+            
+            {/* RUTA NOUĂ PENTRU CHAT */}
+            <Route 
+              path="/community" 
+              element={
+                isAuthenticated ? (
+                  <CommunityChat user={userData} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              } 
+            />
+
             <Route path="/select-language" element={<LanguageSelection />} />
             <Route path="/lessons/:language" element={<Lessons />} />
             <Route path="/lesson/:id" element={<LessonDetails />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/problems" element={<ProblemsList />} />
             <Route path="/problem/:id" element={<ProblemDetail />} />
+            <Route path="/assignment-solving/:assignmentId" element={<AssignmentSolving />} />
             <Route path="/submissions" element={<SubmissionsHistory />} />
             <Route path="/submissions/:id" element={<SubmissionDetails />} />
             <Route path="/login" element={<Login onLoginSuccess={handleAuthChange} />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/admin" element={userRole === 'TEACHER' ? <AdminPanel /> : <Navigate to="/dashboard" />} />
+            <Route path="/admin" element={userData?.role === 'TEACHER' ? <AdminPanel /> : <Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

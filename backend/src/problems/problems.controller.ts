@@ -11,27 +11,30 @@ import { Roles } from '../auth/roles.decorator';
 export class ProblemsController {
   constructor(private readonly problemsService: ProblemsService) {}
 
-  // 1. Runda de practică (Arena)
+ 
   @Get('practice') 
   async getPractice() {
     return this.problemsService.getPracticeProblems();
   }
 
-  // 2. PROBLEMA PENTRU LECȚIE (Rezolvă sidebar-ul gol din imagine)
-  // Folosim ParseIntPipe pentru a converti automat ID-ul din string în number
+  @Get('recruiter')
+  async getRecruiterProblems()
+  {
+    return this.problemsService.getRecruiterProblems();
+  }
+
+
   @Get('lesson/:lessonId')
   async getByLesson(@Param('lessonId', ParseIntPipe) lessonId: number) {
     return this.problemsService.getProblemByLesson(lessonId);
   }
 
-  // 3. DETALII PROBLEMĂ DUPĂ ID (Mutat din AppController)
-  // Atenție: Aceasta trebuie să fie SUB 'practice' și 'lesson'
+ 
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.problemsService.findOne(id);
   }
 
-  // 4. CREARE PROBLEMĂ (Doar pentru profesori)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TEACHER')
   @Post() 

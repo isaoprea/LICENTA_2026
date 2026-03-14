@@ -1125,7 +1125,20 @@ let mesaj = \`Bună \${text}\`;
 
   await prisma.problem.createMany({
     data: [
-      // Python Practice
+
+      {
+      title: 'Primul Caracter Unic',
+      description: 'Scrie o funcție care primește un șir de caractere și returnează indexul primului caracter care nu se repetă. Dacă toate caracterele se repetă, returnează -1.\n\nExemplu:\nInput: "codeoverload"\nOutput: 0 (litera "c" e prima care nu se repetă)',
+      difficulty: 'Medium',
+      type: 'RECRUITER', 
+      lessonId: null,
+      testCases: [
+        { input: "codeoverload", output: "0" },
+        { input: "aabb", output: "-1" },
+        { input: "loveleetcode", output: "2" }
+      ]
+    },
+    
       {
         title: 'Suma Cifrelor',
         description: 'Se dă un număr întreg n. Calculează suma cifrelor sale.',

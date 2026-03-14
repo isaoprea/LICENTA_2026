@@ -18,10 +18,7 @@ export class AppController {
     private readonly aiService: AiService
   ) {}
 
-  /**
-   * Returnează statisticile generale ale utilizatorului (Lecții rezolvate, rata de succes).
-   * Această rută rămâne aici deoarece este de uz general.
-   */
+  
   @UseGuards(JwtAuthGuard)
   @Get('user/stats')
   async getUserStats(@Request() req) {
@@ -51,9 +48,7 @@ export class AppController {
     };
   }
 
-  /**
-   * Utilizează AI-ul pentru a explica erorile de compilare sau execuție.
-   */
+  
   @UseGuards(JwtAuthGuard)
   @Post('ai/explain')
   async explainError(@Body() data: { problemId: string, code: string, error: string }) {

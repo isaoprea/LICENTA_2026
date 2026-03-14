@@ -6,7 +6,6 @@ import { ProblemType } from '@prisma/client';
 export class ProblemsService {
   constructor(private prisma: PrismaService) {}
 
-  // 1. Găsește problema asociată unei lecții (Pentru sidebar-ul din imagini)
   async getProblemByLesson(lessonId: number) {
     const problem = await this.prisma.problem.findFirst({
       where: { 
@@ -21,7 +20,6 @@ export class ProblemsService {
     return problem;
   }
 
-  // 2. Găsește o singură problemă după ID-ul ei (Mutat din AppController)
   async findOne(id: string) {
     const problem = await this.prisma.problem.findUnique({
       where: { id }
@@ -33,7 +31,6 @@ export class ProblemsService {
     return problem;
   }
 
-  // Metodele tale actuale (Rămân neschimbate)
   async getPracticeProblems() {
     return this.prisma.problem.findMany({
       where: { type: 'PRACTICE' },
@@ -59,6 +56,16 @@ export class ProblemsService {
         type: data.type || 'HOMEWORK', 
         authorId: teacherId
       }
+    });
+  }
+
+
+ 
+
+  async getRecruiterProblems() {
+    return this.prisma.problem.findMany({
+      where: { type: 'RECRUITER' },
+      orderBy: { difficulty: 'asc' }
     });
   }
 }

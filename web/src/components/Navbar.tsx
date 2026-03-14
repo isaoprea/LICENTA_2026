@@ -5,14 +5,13 @@ import {
   User, 
   LogOut, 
   ChevronDown, 
-  LayoutDashboard, 
   Sun, 
   Moon, 
   Palette, 
   Bell,
   CheckCheck,
   Circle,
-  MessageSquare // Am adăugat și o iconiță opțională pentru context, deși folosim doar text
+  Briefcase // Iconiță nouă pentru recruiter
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -36,6 +35,45 @@ export default function Navbar() {
     if (saved === 'light') return false;
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+
+  // Extragem datele utilizatorului
+  const userData = (() => {
+    if (!token) return null;
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(window.atob(base64));
+      return {
+        name: payload.name,
+        role: payload.role, // "USER", "TEACHER", "RECRUITER"
+        id: payload.sub
+      };
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  // --- LOGICA FILTRARE LINK-URI ---
+  const navLinks = {
+    USER: [
+      { name: 'Probleme', path: '/problems' },
+      { name: 'Istoric', path: '/submissions' },
+      { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Lecții', path: '/select-language' },
+      { name: 'Comunitate', path: '/community' },
+    ],
+    TEACHER: [
+      { name: 'Probleme', path: '/problems' },
+      { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Comunitate', path: '/community' },
+    ],
+    RECRUITER: [
+      { name: 'Dashboard Recrutare', path: '/dashboard' },
+      { name: 'Bază de Probleme', path: '/problems' },
+    ]
+  };
+
+  const linksToShow = userData?.role ? (navLinks[userData.role as keyof typeof navLinks] || navLinks.USER) : [];
 
   useEffect(() => {
     const root = document.documentElement;
@@ -82,22 +120,6 @@ export default function Navbar() {
     setIsDark(prev => !prev);
   };
 
-  const userData = (() => {
-    if (!token) return null;
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const payload = JSON.parse(window.atob(base64));
-      return {
-        name: payload.name,
-        role: payload.role,
-        id: payload.sub
-      };
-    } catch (e) {
-      return null;
-    }
-  })();
-
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
@@ -113,13 +135,17 @@ export default function Navbar() {
           CodeOverload
         </Link>
         
+        {/* Meniu Dinamic bazat pe Rol */}
         <div className="hidden md:flex gap-8 text-slate-600 dark:text-slate-300 font-bold text-sm">
-          <Link to="/problems" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Probleme</Link>
-          <Link to="/submissions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Istoric</Link>
-          <Link to="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Dashboard</Link>
-          <Link to="/select-language" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Lecții</Link>
-          
-          <Link to="/community" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Comunitate</Link>
+          {linksToShow.map((link) => (
+            <Link 
+              key={link.path} 
+              to={link.path} 
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -180,13 +206,13 @@ export default function Navbar() {
               onClick={() => { setIsDropdownOpen(!isDropdownOpen); setIsNotifOpen(false); }}
               className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group"
             >
-              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-[11px] text-white font-black shadow-inner">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] text-white font-black shadow-inner ${userData.role === 'RECRUITER' ? 'bg-amber-600' : 'bg-blue-600'}`}>
                 {userData.name ? userData.name.split(' ').map((w:any) => w[0]).join('').toUpperCase().substring(0, 2) : '?'}
               </div>
               <div className="flex flex-col text-left mr-1">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{userData.name}</span>
-                <span className="text-[9px] text-blue-500 font-black uppercase tracking-tighter">
-                  {userData.role === 'TEACHER' ? 'Profesor' : 'Student'}
+                <span className={`text-[9px] font-black uppercase tracking-tighter ${userData.role === 'RECRUITER' ? 'text-amber-500' : 'text-blue-500'}`}>
+                  {userData.role === 'TEACHER' ? 'Profesor' : userData.role === 'RECRUITER' ? 'Recruiter' : 'Student'}
                 </span>
               </div>
               <ChevronDown size={16} className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -217,6 +243,12 @@ export default function Navbar() {
                   {userData.role === 'TEACHER' && (
                     <button onClick={() => { navigate('/admin'); setIsDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors">
                       <Lock size={18} /> Admin Panel
+                    </button>
+                  )}
+
+                  {userData.role === 'RECRUITER' && (
+                    <button onClick={() => { navigate('/recruiter-dashboard'); setIsDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
+                      <Briefcase size={18} /> Dashboard Recrutare
                     </button>
                   )}
 

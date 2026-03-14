@@ -18,6 +18,8 @@ import {PrismaModule} from './prisma/prisma.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import {ProblemsModule} from './problems/problems.module';
 import { ChatModule } from './chat/chat.module';
+import { AssessmentsModule } from './assessments/assessments.module';   
+import { AssessmentsService } from './assessments/assessments.service';
 @Module({
   imports: [
     JwtModule.register({
@@ -31,9 +33,10 @@ import { ChatModule } from './chat/chat.module';
     PrismaModule,
     NotificationsModule,
     ProblemsModule,
-    ChatModule
+    ChatModule,
+    AssessmentsModule
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
-  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard, AiService],
+  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard, AiService, AssessmentsService],
 })
 export class AppModule {}

@@ -15,8 +15,7 @@ export class AdminController {
         description: data.description,
         difficulty: data.difficulty,
         testCases: data.testCases, 
-        // ADAUGĂ ACEASTĂ LINIE:
-        // Ne asigurăm că legăm problema de o lecție dacă este trimis un ID
+        
         lessonId: data.lessonId ? Number(data.lessonId) : null,
       },
     });

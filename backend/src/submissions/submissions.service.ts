@@ -29,6 +29,7 @@ export class SubmissionsService {
       javascript: ["node", "javascript", "nodejs"],
       python: ["python", "python3", "py"],
       cpp: ["cpp", "c++", "gcc"]
+      
     };
 
     const searchAliases = languageAliases[language.toLowerCase()] || [language.toLowerCase()];

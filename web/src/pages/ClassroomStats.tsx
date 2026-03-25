@@ -9,6 +9,8 @@ import {
   Send
 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 export const ClassroomStats = ({ classroomId }: { classroomId: string }) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ export const ClassroomStats = ({ classroomId }: { classroomId: string }) => {
   const fetchData = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.get(`http://localhost:3000/classrooms/${classroomId}/stats`, {
+      const res = await axios.get(`${API_BASE_URL}/classrooms/${classroomId}/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);
@@ -39,7 +41,7 @@ export const ClassroomStats = ({ classroomId }: { classroomId: string }) => {
     }
 
     try {
-      await axios.patch(`http://localhost:3000/classrooms/assignment/${assignmentId}/grade`, 
+      await axios.patch(`${API_BASE_URL}/classrooms/assignment/${assignmentId}/grade`, 
         { grade: Number(grade) },
         { headers: { Authorization: `Bearer ${token}` }}
       );

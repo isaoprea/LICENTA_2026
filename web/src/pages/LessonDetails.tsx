@@ -44,7 +44,6 @@ export default function LessonDetails() {
       .catch(err => console.error("Eroare la încărcarea lecției:", err));
   }, [id]);
 
-  // Funcția pentru rularea codului
   const handleRunCode = async () => {
     if (!lesson?.problems?.length) {
       setOutput("Eroare: Nu există nicio problemă asociată acestei lecții.");
@@ -52,7 +51,7 @@ export default function LessonDetails() {
     }
 
     setLoading(true);
-    setAiHint(""); // Resetăm indiciul vechi la fiecare rulare nouă
+    setAiHint(""); 
     setOutput("> Se execută testele...");
     
     try {

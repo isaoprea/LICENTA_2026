@@ -11,9 +11,12 @@ import {
   Bell,
   CheckCheck,
   Circle,
-  Briefcase // Iconiță nouă pentru recruiter
+  Briefcase
 } from 'lucide-react';
 import axios from 'axios';
+
+// Folosim variabila de mediu pentru Ngrok, altfel fallback la localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const Lock = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -27,7 +30,7 @@ export default function Navbar() {
   const token = localStorage.getItem('token');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]); // Inițializat ca array gol
   
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -36,7 +39,6 @@ export default function Navbar() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // Extragem datele utilizatorului
   const userData = (() => {
     if (!token) return null;
     try {
@@ -45,7 +47,7 @@ export default function Navbar() {
       const payload = JSON.parse(window.atob(base64));
       return {
         name: payload.name,
-        role: payload.role, // "USER", "TEACHER", "RECRUITER"
+        role: payload.role,
         id: payload.sub
       };
     } catch (e) {
@@ -53,7 +55,6 @@ export default function Navbar() {
     }
   })();
 
-  // --- LOGICA FILTRARE LINK-URI ---
   const navLinks = {
     USER: [
       { name: 'Probleme', path: '/problems' },
@@ -68,8 +69,8 @@ export default function Navbar() {
       { name: 'Comunitate', path: '/community' },
     ],
     RECRUITER: [
-      { name: 'Dashboard Recrutare', path: '/dashboard' },
-      { name: 'Bază de Probleme', path: '/problems' },
+      { name: 'Dashboard Recrutare', path: '/dashboard?tab=dashboard' },
+      { name: 'Bază de Probleme', path: '/dashboard?tab=problems' },
     ]
   };
 
@@ -89,12 +90,14 @@ export default function Navbar() {
   const fetchNotifications = async () => {
     if (!token) return;
     try {
-      const res = await axios.get('http://localhost:3000/notifications/me', {
+      const res = await axios.get(`${API_BASE_URL}/notifications/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNotifications(res.data);
+      // Verificăm dacă res.data este într-adevăr un array înainte de a-l salva
+      setNotifications(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Eroare notificări:", err);
+      setNotifications([]); // Resetăm la array gol în caz de eroare
     }
   };
 
@@ -106,7 +109,7 @@ export default function Navbar() {
 
   const markAsRead = async (id: string) => {
     try {
-      await axios.patch(`http://localhost:3000/notifications/${id}/read`, {}, {
+      await axios.patch(`${API_BASE_URL}/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -120,7 +123,9 @@ export default function Navbar() {
     setIsDark(prev => !prev);
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = Array.isArray(notifications) 
+    ? notifications.filter(n => n && !n.read).length 
+    : 0;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -135,7 +140,6 @@ export default function Navbar() {
           CodeOverload
         </Link>
         
-        {/* Meniu Dinamic bazat pe Rol */}
         <div className="hidden md:flex gap-8 text-slate-600 dark:text-slate-300 font-bold text-sm">
           {linksToShow.map((link) => (
             <Link 
@@ -176,7 +180,7 @@ export default function Navbar() {
                   </div>
 
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.length > 0 ? (
+                    {Array.isArray(notifications) && notifications.length > 0 ? (
                       notifications.map((n) => (
                         <div 
                           key={n.id} 

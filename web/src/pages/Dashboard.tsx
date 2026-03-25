@@ -13,9 +13,12 @@ import {
   BookOpen,
   ArrowRight,
   PlusCircle,
-  Users // Pictogramă adăugată pentru clase
+  Users 
 } from 'lucide-react';
 import axios from 'axios';
+
+// --- DEFINIRE URL API ---
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,7 +27,7 @@ export default function Dashboard() {
   const [userData, setUserData] = useState({ name: "" });
   const [stats, setStats] = useState({ solved: 0, attempts: 0, successRate: 0 });
   const [assignments, setAssignments] = useState<any[]>([]);
-  const [myClassrooms, setMyClassrooms] = useState<any[]>([]); // Stare nouă pentru clase
+  const [myClassrooms, setMyClassrooms] = useState<any[]>([]);
   const [selectedClassroomDetails, setSelectedClassroomDetails] = useState<any>(null);
   const [loadingClassroomDetails, setLoadingClassroomDetails] = useState(false);
   const [languages, setLanguages] = useState([
@@ -44,26 +47,27 @@ export default function Dashboard() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
 
-      const userRes = await axios.get('http://localhost:3000/auth/profile', { headers });
+      // Folosim `${API_BASE_URL}` peste tot
+      const userRes = await axios.get(`${API_BASE_URL}/auth/profile`, { headers });
       setUserData({ 
         name: userRes.data.name || "Utilizator",
       });
 
-      const statsRes = await axios.get('http://localhost:3000/user/stats', { headers });
+      const statsRes = await axios.get(`${API_BASE_URL}/user/stats`, { headers });
       setStats({
         solved: statsRes.data.solvedCount || 0,
         attempts: statsRes.data.totalAttempts || 0,
         successRate: statsRes.data.successRate || 0
       });
 
-      const assignmentsRes = await axios.get('http://localhost:3000/classrooms/my-assignments', { headers });
+      const assignmentsRes = await axios.get(`${API_BASE_URL}/classrooms/my-assignments`, { headers });
       setAssignments(assignmentsRes.data);
 
-      const classroomsRes = await axios.get('http://localhost:3000/classrooms/student/me', { headers });
+      const classroomsRes = await axios.get(`${API_BASE_URL}/classrooms/student/me`, { headers });
       setMyClassrooms(classroomsRes.data);
 
       const langPromises = ['python', 'cpp', 'java'].map(lang => 
-        axios.get(`http://localhost:3000/lessons/modules/${lang}`, { headers })
+        axios.get(`${API_BASE_URL}/lessons/modules/${lang}`, { headers })
       );
       
       const langResults = await Promise.all(langPromises);
@@ -89,14 +93,14 @@ export default function Dashboard() {
     
     const token = localStorage.getItem('token');
     try {
-      await axios.post('http://localhost:3000/classrooms/join', 
+      await axios.post(`${API_BASE_URL}/classrooms/join`, 
         { inviteCode: inviteCode.toUpperCase() },
         { headers: { Authorization: `Bearer ${token}` }}
       );
       
       alert("✅ Te-ai alăturat clasei cu succes!");
       setInviteCode('');
-      fetchData(); //reimprospatare
+      fetchData();
     } catch (err: any) {
       alert(err.response?.data?.message || "Cod invalid sau ești deja membru.");
     }
@@ -108,7 +112,7 @@ export default function Dashboard() {
 
     setLoadingClassroomDetails(true);
     try {
-      const res = await axios.get(`http://localhost:3000/classrooms/student/${classroomId}/details`, {
+      const res = await axios.get(`${API_BASE_URL}/classrooms/student/${classroomId}/details`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedClassroomDetails(res.data);
@@ -182,7 +186,6 @@ export default function Dashboard() {
               </div>
             </section>
 
-            {/* SECȚIUNE NOUĂ: CLASELE MELE */}
             <section className="space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
@@ -320,7 +323,6 @@ export default function Dashboard() {
   );
 }
 
-// ... StatCard și LanguageProgress rămân neschimbate
 function StatCard({ icon, label, value, color }: any) {
   return (
     <div className={`bg-slate-900/40 border-b-4 ${color} p-6 rounded-[2rem] transition-all hover:translate-y-[-5px]`}>

@@ -12,6 +12,8 @@ import {
   Code2
 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 export default function AssignmentSolving() {
   const { assignmentId } = useParams(); // ID-ul temei extras din URL
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ export default function AssignmentSolving() {
   useEffect(() => {
     const fetchAssignment = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/assignments/${assignmentId}`, {
+        const res = await axios.get(`${API_BASE_URL}/assignments/${assignmentId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAssignment(res.data);
@@ -63,7 +65,7 @@ export default function AssignmentSolving() {
     setResults(null);
     try {
       // Trimitem assignmentId pentru a declanșa notificarea profesorului în SubmissionsService
-      const res = await axios.post('http://localhost:3000/submissions/run', {
+      const res = await axios.post(`${API_BASE_URL}/submissions/run`, {
         problemId: assignment.problem.id,
         code,
         language: getMonacoLang(assignment.language),

@@ -4,11 +4,11 @@ export function useExamMonitor(token: string, maxWarnings: number = 3) {
   const [warnings, setWarnings] = useState(0);
   const [isKicked, setIsKicked] = useState(false);
   const isExamActive = useRef(false);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-  // Funcție pentru a trimite avertismentul la backend
   const reportCheatToBackend = async (newWarnings: number) => {
     try {
-      await fetch(`http://localhost:3000/assessments/session/${token}/cheat`, {
+      await fetch(`${API_BASE_URL}/assessments/session/${token}/cheat`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ warnings: newWarnings }),
@@ -20,15 +20,14 @@ export function useExamMonitor(token: string, maxWarnings: number = 3) {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      // Dacă examenul a început și studentul ascunde pagina (schimbă tab-ul)
       if (document.hidden && isExamActive.current) {
         setWarnings((prev) => {
           const newWarnings = prev + 1;
           
-          reportCheatToBackend(newWarnings); // Anunțăm backend-ul
+          reportCheatToBackend(newWarnings); 
 
           if (newWarnings >= maxWarnings) {
-            setIsKicked(true); // Exmatriculat
+            setIsKicked(true); 
           } else {
             alert(`⚠️ AVERTISMENT (${newWarnings}/${maxWarnings}): Ai părăsit pagina examenului! La ${maxWarnings} avertismente testul se închide automat.`);
           }

@@ -5,11 +5,12 @@ import {
   Get,
   NotFoundException, 
   UseGuards, 
-  Request 
+  Request,
 } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { AiService } from './ai/ai.service';
+
 
 @Controller()
 export class AppController {
@@ -18,7 +19,6 @@ export class AppController {
     private readonly aiService: AiService
   ) {}
 
-  
   @UseGuards(JwtAuthGuard)
   @Get('user/stats')
   async getUserStats(@Request() req) {
@@ -48,7 +48,6 @@ export class AppController {
     };
   }
 
-  
   @UseGuards(JwtAuthGuard)
   @Post('ai/explain')
   async explainError(@Body() data: { problemId: string, code: string, error: string }) {

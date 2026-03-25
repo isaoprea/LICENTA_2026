@@ -20,6 +20,9 @@ import {ProblemsModule} from './problems/problems.module';
 import { ChatModule } from './chat/chat.module';
 import { AssessmentsModule } from './assessments/assessments.module';   
 import { AssessmentsService } from './assessments/assessments.service';
+import { EmailService } from './email/email.service';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 @Module({
   imports: [
     JwtModule.register({
@@ -37,6 +40,7 @@ import { AssessmentsService } from './assessments/assessments.service';
     AssessmentsModule
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
-  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, AdminGuard, AiService, AssessmentsService],
+  providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, 
+    AdminGuard, AiService, AssessmentsService, EmailService  ],
 })
 export class AppModule {}

@@ -283,17 +283,19 @@ model Assessment {
 
 model ExamSession {
   id             String    @id @default(uuid())
-  candidateEmail String    // Email-ul candidatului
-  candidateName  String    // Numele candidatului
-  token          String    @unique // Link-ul secret de acces
-  
+  candidateEmail String  
+  candidateName  String    
+  token          String    @unique 
   status         String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CHEATED
   score          Int       @default(0)
-  cheatWarnings  Int       @default(0) // De câte ori a ieșit din tab
+  cheatWarnings  Int       @default(0) 
+  finalCode      String?   @db.Text
+  codeHistory    Json?
+  TestResults    Json?
   
-  startedAt      DateTime? // Când a apăsat "Start"
-  completedAt    DateTime? // Când a terminat sau i-a expirat timpul
-
+  startedAt      DateTime? 
+  completedAt    DateTime? 
   assessmentId   String
   assessment     Assessment @relation(fields: [assessmentId], references: [id])
+
 }

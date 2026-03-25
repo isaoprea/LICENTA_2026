@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 
+
+
 export default function Register() {
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const navigate = useNavigate();

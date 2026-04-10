@@ -32,7 +32,9 @@ export class AuthController {
         email: true,
         name: true,  
         role: true,
-        streak: true
+        streak: true,
+        xp: true,
+        level: true
       }
     });
 

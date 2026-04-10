@@ -21,8 +21,9 @@ import { ChatModule } from './chat/chat.module';
 import { AssessmentsModule } from './assessments/assessments.module';   
 import { AssessmentsService } from './assessments/assessments.service';
 import { EmailService } from './email/email.service';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import { DuelGateway } from './duels/duel.getway';
+import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
+import { AiAnalysisService } from './ai-analysis/ai-analysis.service';
 @Module({
   imports: [
     JwtModule.register({
@@ -37,10 +38,12 @@ import { join } from 'path';
     NotificationsModule,
     ProblemsModule,
     ChatModule,
-    AssessmentsModule
+    AssessmentsModule,
+    AiAnalysisModule,
+  
   ],
   controllers: [AppController, SubmissionsController, AuthController, AdminController],
   providers: [AppService, PrismaService, SubmissionsService, AuthService, JwtStrategy, 
-    AdminGuard, AiService, AssessmentsService, EmailService  ],
+    AdminGuard, AiService, AssessmentsService, EmailService, DuelGateway, AiAnalysisService],
 })
 export class AppModule {}

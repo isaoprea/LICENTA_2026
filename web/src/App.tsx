@@ -18,6 +18,9 @@ import AssignmentSolving from './pages/AssignmentSolving';
 import CommunityChat from './pages/CommunityChat';
 import ExamEnvironment from './pages/ExamEnvironment';
 import RecruiterDashboard from './pages/RecruiterDashboard';
+import DuelLobby from './pages/DuelLobby';
+import DuelArena from './pages/DuelArena';
+import AiProfile from './pages/AiProfile';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -97,6 +100,9 @@ function App() {
             <Route path="/assignment-solving/:assignmentId" element={<AssignmentSolving />} />
             <Route path="/submissions" element={<SubmissionsHistory />} />
             <Route path="/submissions/:id" element={<SubmissionDetails />} />
+            <Route path="/duel-lobby" element={<DuelLobby />} />
+            <Route path="/duel-arena/:id" element={<DuelArena />} />
+            <Route path="/ai-profile" element={<AiProfile />} />
 
             <Route path="/login" element={<Login onLoginSuccess={handleAuthChange} />} />
             <Route path="/register" element={<Register />} />

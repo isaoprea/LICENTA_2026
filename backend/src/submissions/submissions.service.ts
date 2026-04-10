@@ -28,7 +28,11 @@ export class SubmissionsService {
     const languageAliases: Record<string, string[]> = {
       javascript: ["node", "javascript", "nodejs"],
       python: ["python", "python3", "py"],
-      cpp: ["cpp", "c++", "gcc"]
+      cpp: ["cpp", "c++", "gcc"],
+      rust: ["rust", "rs"],
+      java: ["java"],
+      csharp: ["csharp", "c#"],
+      typescript: ["typescript", "ts"],
       
     };
 

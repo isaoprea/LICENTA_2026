@@ -37,3 +37,15 @@ Thumbs.db
 # Generated files
 coverage/
 .nyc_output/
+
+# --- AI Engine Specific ---
+ai-engine/data/
+ai-engine/venv/
+ai-engine/__pycache__/
+ai-engine/*.pth
+ai-engine/*.csv
+# Modelele antrenate (fișiere .pth sunt foarte mari)
+ai-engine/codebert_quality.pth
+
+# Fișierele CSV de training (dacă sunt mari)
+ai-engine/data/raw/*.csv

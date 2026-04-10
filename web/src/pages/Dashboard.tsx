@@ -13,18 +13,18 @@ import {
   BookOpen,
   ArrowRight,
   PlusCircle,
-  Users 
+  Users,
+  Swords
 } from 'lucide-react';
 import axios from 'axios';
 
-// --- DEFINIRE URL API ---
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState('');
-  const [userData, setUserData] = useState({ name: "" });
+  const [userData, setUserData] = useState({ name: "", xp: 0, level: 1 });
   const [stats, setStats] = useState({ solved: 0, attempts: 0, successRate: 0 });
   const [assignments, setAssignments] = useState<any[]>([]);
   const [myClassrooms, setMyClassrooms] = useState<any[]>([]);
@@ -43,14 +43,15 @@ export default function Dashboard() {
       return;
     }
 
-    setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Folosim `${API_BASE_URL}` peste tot
-      const userRes = await axios.get(`${API_BASE_URL}/auth/profile`, { headers });
+      // FETCH XP REPROSPĂTAT: Timestamp forțat pentru a evita cache-ul
+      const userRes = await axios.get(`${API_BASE_URL}/auth/profile?t=${Date.now()}`, { headers });
       setUserData({ 
         name: userRes.data.name || "Utilizator",
+        xp: userRes.data.xp || 0,
+        level: userRes.data.level || 1
       });
 
       const statsRes = await axios.get(`${API_BASE_URL}/user/stats`, { headers });
@@ -90,14 +91,12 @@ export default function Dashboard() {
 
   const handleJoinClassroom = async () => {
     if (inviteCode.length < 6) return alert("Codul trebuie să aibă cel puțin 6 caractere!");
-    
     const token = localStorage.getItem('token');
     try {
       await axios.post(`${API_BASE_URL}/classrooms/join`, 
         { inviteCode: inviteCode.toUpperCase() },
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      
       alert("✅ Te-ai alăturat clasei cu succes!");
       setInviteCode('');
       fetchData();
@@ -109,7 +108,6 @@ export default function Dashboard() {
   const handleOpenClassroomDetails = async (classroomId: string) => {
     const token = localStorage.getItem('token');
     if (!token) return;
-
     setLoadingClassroomDetails(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/classrooms/student/${classroomId}/details`, {
@@ -118,7 +116,6 @@ export default function Dashboard() {
       setSelectedClassroomDetails(res.data);
     } catch (err) {
       console.error('Eroare la încărcarea detaliilor clasei:', err);
-      alert('Nu am putut încărca detaliile clasei.');
     } finally {
       setLoadingClassroomDetails(false);
     }
@@ -126,8 +123,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
+    
+    // FETCH LA REVENIRE: Când utilizatorul închide Arena și revine în tab-ul de Dashboard
+    window.addEventListener('focus', fetchData);
     window.addEventListener('auth-change', fetchData);
-    return () => window.removeEventListener('auth-change', fetchData);
+    
+    return () => {
+      window.removeEventListener('focus', fetchData);
+      window.removeEventListener('auth-change', fetchData);
+    };
   }, []);
 
   if (loading) {
@@ -155,12 +159,62 @@ export default function Dashboard() {
           <StatCard icon={<Trophy color="#f59e0b" />} label="Probleme Rezolvate" value={stats.solved} color="border-amber-500/20" />
           <StatCard icon={<Target color="#3b82f6" />} label="Rată Succes" value={`${stats.successRate}%`} color="border-blue-500/20" />
           <StatCard icon={<Activity color="#10b981" />} label="Încercări" value={stats.attempts} color="border-emerald-500/20" />
-          <StatCard icon={<Zap color="#a855f7" />} label="Status" value={stats.solved > 10 ? "Veteran" : "Recrut"} color="border-purple-500/20" />
+          <StatCard icon={<Zap color="#a855f7" />} label="Status" value={userData.level > 10 ? "Veteran" : "Recrut"} color="border-purple-500/20" />
+        </div>
+
+        {/* --- ARENA SI NIVEL --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 relative overflow-hidden group bg-gradient-to-br from-blue-600/20 to-indigo-900/40 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl transition-all hover:border-blue-500/50">
+            <div className="absolute -right-10 -top-10 bg-blue-500/10 w-40 h-40 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+              <div className="p-6 bg-blue-600 rounded-[2rem] shadow-xl shadow-blue-900/40">
+                <Swords size={42} className="text-white animate-pulse" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Arena Duelurilor 1v1</h3>
+                <p className="text-blue-100/60 text-sm font-medium mt-1">
+                  Ești gata să îți demonstrezi skill-urile? Luptă-te cu alți elevi în timp real și câștigă <span className="text-blue-400 font-bold">XP extra</span>!
+                </p>
+                <button 
+                  onClick={() => navigate('/duel-lobby')}
+                  className="mt-6 px-8 py-3 bg-white text-blue-900 rounded-2xl font-black uppercase italic text-sm hover:bg-blue-50 transition-all active:scale-95 shadow-lg"
+                >
+                  Intră în meci
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/50 rounded-[2.5rem] border border-white/5 p-8 flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Rank Curent</p>
+                <h4 className="text-xl font-black text-white italic uppercase tracking-tighter mt-1">Nivel {userData.level}</h4>
+              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
+                <Trophy size={20} />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-between text-[10px] font-bold uppercase mb-2">
+                <span className="text-slate-400">Progres XP</span>
+                <span className="text-blue-400">{userData.xp} / {userData.level * 100} XP</span>
+              </div>
+              <div className="h-2 bg-black/40 rounded-full overflow-hidden">
+                {/* ANIMATIE XP BAR */}
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((userData.xp / (userData.level * 100)) * 100, 100)}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full bg-blue-500 rounded-full"
+                ></motion.div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-8">
-            
             <section className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-xl border border-blue-500/20 rounded-[2.5rem] p-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
@@ -191,7 +245,6 @@ export default function Dashboard() {
                 <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
                 <h3 className="text-xl font-black italic uppercase">Clasele Mele</h3>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {myClassrooms.length > 0 ? (
                   myClassrooms.map((cls) => (
@@ -205,7 +258,6 @@ export default function Dashboard() {
                           <Users size={20} />
                         </div>
                       </div>
-                      
                       <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-800/50">
                         <div className="flex flex-col">
                           <span className="text-[9px] text-slate-600 font-black uppercase tracking-tighter">Sarcini alocate</span>
@@ -236,37 +288,16 @@ export default function Dashboard() {
                   ) : (
                     <>
                       <h4 className="text-lg font-black uppercase italic">Detalii clasă: {selectedClassroomDetails?.name}</h4>
-                      <p className="text-xs text-slate-400 font-bold mt-1">Profesor: {selectedClassroomDetails?.teacher?.name} ({selectedClassroomDetails?.teacher?.email})</p>
-                      <p className="text-xs text-slate-500 mt-2">{selectedClassroomDetails?.description || 'Fără descriere'}</p>
-
+                      <p className="text-xs text-slate-400 font-bold mt-1">Profesor: {selectedClassroomDetails?.teacher?.name}</p>
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="bg-slate-800/40 rounded-xl p-3">
                           <p className="text-[10px] text-slate-500 uppercase font-black">Colegi în clasă</p>
                           <p className="text-xl font-black">{selectedClassroomDetails?._count?.students || 0}</p>
                         </div>
                         <div className="bg-slate-800/40 rounded-xl p-3">
-                          <p className="text-[10px] text-slate-500 uppercase font-black">Temele tale în clasă</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-black">Temele tale</p>
                           <p className="text-xl font-black">{selectedClassroomDetails?.assignments?.length || 0}</p>
                         </div>
-                      </div>
-
-                      <div className="mt-4 space-y-2">
-                        <p className="text-[10px] text-slate-500 uppercase font-black">Teme în această clasă</p>
-                        {selectedClassroomDetails?.assignments?.length > 0 ? (
-                          selectedClassroomDetails.assignments.map((asg: any) => (
-                            <div key={asg.id} className="flex items-center justify-between bg-slate-800/30 rounded-xl px-3 py-2">
-                              <div>
-                                <p className="text-sm font-bold">{asg.title}</p>
-                                <p className="text-[10px] text-slate-500">{asg.problem?.title} • {asg.language}</p>
-                              </div>
-                              <span className={`text-[10px] font-black px-2 py-1 rounded-md ${asg.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                {asg.status}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-xs text-slate-500">Nu ai teme în această clasă.</p>
-                        )}
                       </div>
                     </>
                   )}
@@ -290,7 +321,6 @@ export default function Dashboard() {
                 <BookOpen className="text-blue-500" size={20} />
                 <h3 className="text-xl font-black italic uppercase">Teme Primite</h3>
               </div>
-              
               <div className="space-y-4">
                 {assignments.filter(a => a.status === 'PENDING').length > 0 ? (
                   assignments.filter(a => a.status === 'PENDING').map((asg: any) => (

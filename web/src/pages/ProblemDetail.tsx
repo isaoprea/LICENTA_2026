@@ -99,7 +99,7 @@ export default function ProblemDetail() {
   return (
     <div className="flex h-[calc(100vh-60px)] bg-slate-50 dark:bg-slate-950">
      
-      <div className="flex-1 p-8 border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
+      <div className="w-[35%] p-8 border-r border-slate-200 dark:border-slate-700 overflow-y-auto bg-white dark:bg-slate-900">
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-50 mb-4">{problem.title}</h1>
         <span className="inline-block bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-1.5 rounded-full text-sm font-bold mb-6">
           {problem.difficulty}
@@ -108,13 +108,15 @@ export default function ProblemDetail() {
       </div>
 
       
-      <div className="flex-1 flex flex-col p-5 gap-4 bg-white dark:bg-slate-900">
+      <div className="w-[65%] flex flex-col p-5 gap-4 bg-white dark:bg-slate-900">
         <div className="flex justify-between items-center">
           <select value={language} onChange={(e) => setLanguage(e.target.value)} className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200 dark:border-slate-700 font-bold">
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
             <option value="java">Java</option>
             <option value="cpp">C++</option>
+            <option value="rust"> Rust</option>
+            <option value="typescript"> Typescript</option>
           </select>
           <div className="flex gap-2">
             <button 
@@ -138,7 +140,7 @@ export default function ProblemDetail() {
                 ) : (
                   <>
                     <Lightbulb size={16} />
-                    Stiu eu!
+                   HINT
                   </>
                 )}
               </button>

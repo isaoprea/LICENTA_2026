@@ -1,109 +1,105 @@
 generator client {
-
   provider = "prisma-client-js"
-
 }
-
-
 
 datasource db {
-
   provider = "postgresql"
-
-  
-
 }
-
-
 
 model User {
-
-  id               String         @id @default(uuid())
-
-  messages  Message[]
-
-  email            String         @unique
-
-  password         String
-
-  name             String?
-
-  submissions      Submission[]
-
-  createdAt        DateTime       @default(now())
-
-  role             String         @default("USER")
-
-  streak           Int            @default(0)
-
-  lastActivityDate DateTime       @default(now())
-
-
-
-  classroomsTeacher Classroom[]    @relation("TeacherClassrooms")
-
-  classroomsStudent Classroom[]    @relation("StudentClassrooms")
-
-  assignments       Assignment[]   @relation("StudentAssignments")
-
-  notifications     Notification[]
-
-  createdProblems Problem[]        @relation("ProblemAuthor")
-  messageReactions MessageReaction[]
-  createdAssessments Assessment[]  @relation("RecruiterAssessments")
-
+  id                 String            @id @default(uuid())
+  email              String            @unique
+  password           String
+  name               String?
+  createdAt          DateTime          @default(now())
+  role               String            @default("USER")
+  xp                 Int               @default(0)
+  level              Int               @default(1)
+  streak             Int               @default(0)
+  lastActivityDate   DateTime          @default(now())
+  submissions        Submission[]
+  notifications      Notification[]
+  messages           Message[]
+  messageReactions   MessageReaction[]
+  classroomsTeacher  Classroom[]       @relation("TeacherClassrooms")
+  classroomsStudent  Classroom[]       @relation("StudentClassrooms")
+  assignments        Assignment[]      @relation("StudentAssignments")
+  createdProblems    Problem[]         @relation("ProblemAuthor")
+  createdAssessments Assessment[]      @relation("RecruiterAssessments")
+  duelsAsPlayer1     Duel[]            @relation("Player1Duels")
+  duelsAsPlayer2     Duel[]            @relation("Player2Duels")
+  wonDuels           Duel[]            @relation("DuelWinner")
+  aiAnalysis         AiAnalysis?
 }
 
-enum ProblemType  {
-  LESSON //Probleme pt progresul lectiilor
-  PRACTICE // probleme pt exersare
-  HOMEWORK // probleme create direct de prof pentru teme 
-  RECRUITER //probleme din care sa alega un recruiter pt assesment
+model Duel {
+  id           String     @id @default(uuid())
+  problemId    String
+  problem      Problem    @relation(fields: [problemId], references: [id])
+  classroomId  String?
+  classroom    Classroom? @relation(fields: [classroomId], references: [id])
+  player1Id    String
+  player1      User       @relation("Player1Duels", fields: [player1Id], references: [id])
+  player2Id    String
+  player2      User       @relation("Player2Duels", fields: [player2Id], references: [id])
+  player1Score Int        @default(0)
+  player2Score Int        @default(0)
+  player1Time  Int?
+  player2Time  Int?
+  winnerId     String?
+  winner       User?      @relation("DuelWinner", fields: [winnerId], references: [id])
+  status       String     @default("PENDING")
+  startedAt    DateTime?
+  endedAt      DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([player1Id])
+  @@index([player2Id])
+  @@index([status])
+}
+
+enum ProblemType {
+  LESSON
+  PRACTICE
+  HOMEWORK
+  RECRUITER
 }
 
 model Module {
-
   id          String   @id @default(uuid())
-
   title       String
-
   description String?
-
   language    String
-
   order       Int      @default(0)
-
   lessons     Lesson[]
-
   createdAt   DateTime @default(now())
-
 }
-
-
 
 model Lesson {
-
   id          Int       @id @default(autoincrement())
-
   title       String
-
   content     String    @db.Text
-
   description String
-
   order       Int       @default(0)
-
   moduleId    String
-
   module      Module    @relation(fields: [moduleId], references: [id])
-
   problems    Problem[]
-
   createdAt   DateTime  @default(now())
-
 }
 
+model AiAnalysis {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
+  logicScore      Int @default(0)
+  cleanCodeScore  Int @default(0)
+  efficiencyScore Int @default(0)
+  versatilityScore Int @default(0)
+
+  summary   String?  @db.Text
+  updatedAt DateTime @updatedAt
+}
 
 model Problem {
   id          String       @id @default(uuid())
@@ -112,120 +108,69 @@ model Problem {
   difficulty  String
   testCases   Json
   type        ProblemType  @default(PRACTICE)
-  authorId    String?      
+  authorId    String?
   author      User?        @relation("ProblemAuthor", fields: [authorId], references: [id])
-
   lessonId    Int?
   lesson      Lesson?      @relation(fields: [lessonId], references: [id])
   submissions Submission[]
   assignments Assignment[]
   assessments Assessment[]
+  duels       Duel[]
 }
-
-
 
 model Submission {
-
-  id          String   @id @default(uuid())
-
-  code        String
-
-  language    String
-
-  status      String   @default("PENDING")
-
-  output      String?
-
-  testResults Json?
-
-  createdAt   DateTime @default(now())
-
-  problemId   String
-
-  problem     Problem  @relation(fields: [problemId], references: [id])
-
-  userId      String?
-
-  user        User?    @relation(fields: [userId], references: [id])
+  id           String      @id @default(uuid())
+  code         String
+  language     String
+  status       String      @default("PENDING")
+  output       String?
+  testResults  Json?
+  createdAt    DateTime    @default(now())
+  problemId    String
+  problem      Problem     @relation(fields: [problemId], references: [id])
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
   assignmentId String?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id])
-
 }
-
-
 
 model Classroom {
-
   id          String       @id @default(uuid())
-
   name        String
-
   description String?
-
   inviteCode  String       @unique
-
   teacherId   String
-
   teacher     User         @relation("TeacherClassrooms", fields: [teacherId], references: [id])
-
   students    User[]       @relation("StudentClassrooms")
-
   assignments Assignment[]
-
+  duels       Duel[]
   createdAt   DateTime     @default(now())
-
 }
-
-
 
 model Assignment {
-
-  id          String     @id @default(uuid())
-
+  id          String       @id @default(uuid())
   title       String
-
   language    String
-
-  status      String     @default("PENDING")
-
+  status      String       @default("PENDING")
   grade       Int?
-
   classroomId String?
-
-  classroom   Classroom? @relation(fields: [classroomId], references: [id])
-
+  classroom   Classroom?   @relation(fields: [classroomId], references: [id])
   problemId   String
-
-  problem     Problem    @relation(fields: [problemId], references: [id])
-
+  problem     Problem      @relation(fields: [problemId], references: [id])
   studentId   String
-
-  student     User       @relation("StudentAssignments", fields: [studentId], references: [id])
-
-  createdAt   DateTime   @default(now())
-
+  student     User         @relation("StudentAssignments", fields: [studentId], references: [id])
+  createdAt   DateTime     @default(now())
   submissions Submission[]
-
 }
 
-
-
 model Notification {
-
   id        String   @id @default(uuid())
-
   userId    String
-
   user      User     @relation(fields: [userId], references: [id])
-
   message   String
-
   type      String
-
   read      Boolean  @default(false)
-
   createdAt DateTime @default(now())
-
 }
 
 model Channel {
@@ -236,15 +181,13 @@ model Channel {
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-  
+  id        String            @id @default(uuid())
+  content   String            @db.Text
+  createdAt DateTime          @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id]) 
-  
+  user      User              @relation(fields: [userId], references: [id])
   channelId String
-  channel   Channel  @relation(fields: [channelId], references: [id])
+  channel   Channel           @relation(fields: [channelId], references: [id])
   reactions MessageReaction[]
 }
 
@@ -252,10 +195,8 @@ model MessageReaction {
   id        String   @id @default(uuid())
   emoji     String
   createdAt DateTime @default(now())
-
   messageId String
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -263,39 +204,32 @@ model MessageReaction {
   @@index([messageId])
 }
 
-
-//test creat de firma
 model Assessment {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
-  companyName String   
-  timeLimit   Int      
-  createdAt   DateTime @default(now())
-  
-  
+  companyName String
+  timeLimit   Int
+  createdAt   DateTime      @default(now())
   recruiterId String
-  recruiter   User     @relation("RecruiterAssessments", fields: [recruiterId], references: [id])
-  language    String   @default ("javascript")
-  problems    Problem[] 
-  sessions    ExamSession[] 
+  recruiter   User          @relation("RecruiterAssessments", fields: [recruiterId], references: [id])
+  language    String        @default("javascript")
+  problems    Problem[]
+  sessions    ExamSession[]
 }
 
-
 model ExamSession {
-  id             String    @id @default(uuid())
-  candidateEmail String  
-  candidateName  String    
-  token          String    @unique 
-  status         String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CHEATED
-  score          Int       @default(0)
-  cheatWarnings  Int       @default(0) 
-  finalCode      String?   @db.Text
+  id             String     @id @default(uuid())
+  candidateEmail String
+  candidateName  String
+  token          String     @unique
+  status         String     @default("PENDING")
+  score          Int        @default(0)
+  cheatWarnings  Int        @default(0)
+  finalCode      String?    @db.Text
   codeHistory    Json?
   TestResults    Json?
-  
-  startedAt      DateTime? 
-  completedAt    DateTime? 
+  startedAt      DateTime?
+  completedAt    DateTime?
   assessmentId   String
   assessment     Assessment @relation(fields: [assessmentId], references: [id])
-
 }
